@@ -1,0 +1,88 @@
+<!--
+  PASTE THIS into an Elementor "HTML" widget on the Servers page
+  (where it says WIDGET 14 — Live status in knuckls-servers-elementor.md).
+
+  Set STATUS_URL to your home-lab feed.
+
+  DNS is on Hostinger (hPanel) — NOT Cloudflare — so use this path:
+    1. Home lab has a static public IP, OR a DDNS name (DuckDNS/No-IP).
+    2. Forward one port on your router to the lab box running this script.
+    3. In hPanel > Domains > knuckls.com > DNS, add:
+         status.knuckls.com  A  <your public IP>
+       (or a CNAME if using DDNS)
+    4. Put a TLS cert on the lab (Caddy or Let's Encrypt) so the URL is HTTPS:
+         https://status.knuckls.com/status.json
+       WordPress will ONLY fetch HTTPS (mixed-content blocked otherwise).
+    Alt: skip the live feed entirely and just show static 🟢/🔴 text on the page.
+
+  The widget auto-refreshes every 30s. Green dot = online, red = offline.
+  Colors use your Terminal palette (#39d353 green, #ff5555 red).
+-->
+<div id="knuckls-status" class="knuckls-status">
+  <p class="knuckls-status__loading">Loading server status…</p>
+</div>
+
+<script>
+  const STATUS_URL = "https://knuckls-status.trycloudflare.com/status.json"; // <-- EDIT ME
+  const REFRESH_MS = 30000;
+
+  function dot(online) {
+    return online
+      ? '<span class="ks-dot ks-dot--up"></span>'
+      : '<span class="ks-dot ks-dot--down"></span>';
+  }
+
+  function render(data) {
+    const el = document.getElementById("knuckls-status");
+    if (!data || !data.servers) {
+      el.innerHTML = '<p class="knuckls-status__err">Status feed unavailable.</p>';
+      return;
+    }
+    let html = '<ul class="ks-list">';
+    for (const s of data.servers) {
+      const players = (s.players !== null && s.players !== undefined)
+        ? s.players + " players" : "—";
+      html += `<li class="ks-row">
+        ${dot(s.online)}
+        <span class="ks-name">${s.name}</span>
+        <span class="ks-game">${s.game}</span>
+        <span class="ks-count">${s.online ? players : "OFFLINE"}</span>
+      </li>`;
+    }
+    html += '</ul>';
+    const updated = data.updated ? new Date(data.updated).toLocaleTimeString() : "";
+    html += `<p class="ks-updated">Updated ${updated}</p>`;
+    el.innerHTML = html;
+  }
+
+  function fetchStatus() {
+    fetch(STATUS_URL)
+      .then(r => r.json())
+      .then(render)
+      .catch(() => {
+        const el = document.getElementById("knuckls-status");
+        if (el) el.innerHTML = '<p class="knuckls-status__err">Status feed unavailable.</p>';
+      });
+  }
+
+  fetchStatus();
+  setInterval(fetchStatus, REFRESH_MS);
+</script>
+
+<style>
+  .knuckls-status { font-family: "Inter", sans-serif; color: #e6edf3; }
+  .ks-list { list-style: none; margin: 0; padding: 0; }
+  .ks-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; margin-bottom: 8px;
+    background: #161b22; border-radius: 8px;
+  }
+  .ks-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .ks-dot--up   { background: #39d353; box-shadow: 0 0 8px #39d353; }
+  .ks-dot--down { background: #ff5555; box-shadow: 0 0 8px #ff5555; }
+  .ks-name { font-weight: 600; min-width: 140px; }
+  .ks-game { color: #8a8d93; flex: 1; }
+  .ks-count { font-family: "JetBrains Mono", monospace; color: #39d353; }
+  .ks-updated { color: #8a8d93; font-size: 12px; margin-top: 6px; }
+  .knuckls-status__err { color: #ffb000; }
+</style>

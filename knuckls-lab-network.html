@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knuckls Home Lab — Network Diagram</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #0d1117;
+      min-height: 100vh;
+      padding: 2rem;
+      color: #e6edf3;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #39d353; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #8a8d93; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container {
+      background: #161b22; border-radius: 1rem; border: 1px solid #21262d;
+      padding: 1.5rem; overflow-x: auto;
+    }
+    svg { width: 100%; min-width: 940px; display: block; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .card { background: #161b22; border-radius: 0.75rem; border: 1px solid #21262d; padding: 1.25rem; }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.green { background: #39d353; }
+    .card-dot.amber { background: #ffb000; }
+    .card-dot.slate { background: #8a8d93; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #8a8d93; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #555b66; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>Knuckls Home Lab — Network</h1>
+      </div>
+      <p class="subtitle">Game servers + live status feed, reached from knuckls.com via Hostinger DNS</p>
+    </div>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1000 660">
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#8a8d93" />
+          </marker>
+          <marker id="arrowG" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#39d353" />
+          </marker>
+          <marker id="arrowA" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#ffb000" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#161b22" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#0d1117"/>
+        <rect x="20" y="20" width="960" height="620" rx="12" fill="url(#grid)" />
+
+        <!-- EXTERNAL ZONE (slate) -->
+        <rect x="40" y="120" width="130" height="64" rx="6" fill="#161b22" stroke="#8a8d93" stroke-width="1.5"/>
+        <text x="105" y="148" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">Players / Squad</text>
+        <text x="105" y="164" fill="#8a8d93" font-size="9" text-anchor="middle">connect via Internet</text>
+
+        <rect x="40" y="430" width="140" height="70" rx="6" fill="#161b22" stroke="#8a8d93" stroke-width="1.5"/>
+        <text x="110" y="456" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">knuckls.com</text>
+        <text x="110" y="472" fill="#8a8d93" font-size="9" text-anchor="middle">Hostinger WP</text>
+        <text x="110" y="488" fill="#8a8d93" font-size="9" text-anchor="middle">(Elementor)</text>
+
+        <rect x="40" y="275" width="120" height="56" rx="6" fill="#161b22" stroke="#8a8d93" stroke-width="1.5"/>
+        <text x="100" y="300" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">Internet</text>
+        <text x="100" y="316" fill="#8a8d93" font-size="9" text-anchor="middle">ISP uplink</text>
+
+        <!-- EDGE / SECURITY (amber) -->
+        <rect x="210" y="275" width="110" height="56" rx="6" fill="#161b22" stroke="#ffb000" stroke-width="1.5"/>
+        <text x="265" y="300" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">Modem</text>
+        <text x="265" y="316" fill="#8a8d93" font-size="9" text-anchor="middle">WAN</text>
+
+        <rect x="370" y="255" width="130" height="96" rx="6" fill="#161b22" stroke="#ffb000" stroke-width="1.5"/>
+        <text x="435" y="282" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">pfSense</text>
+        <text x="435" y="298" fill="#8a8d93" font-size="9" text-anchor="middle">router / firewall</text>
+        <text x="435" y="314" fill="#8a8d93" font-size="9" text-anchor="middle">NAT + port fwd</text>
+        <text x="435" y="330" fill="#8a8d93" font-size="9" text-anchor="middle">DHCP / DNS</text>
+
+        <!-- LAN SWITCH (green) -->
+        <rect x="560" y="275" width="120" height="56" rx="6" fill="#161b22" stroke="#39d353" stroke-width="1.5"/>
+        <text x="620" y="300" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">Switch</text>
+        <text x="620" y="316" fill="#8a8d93" font-size="9" text-anchor="middle">LAN 1 Gbps</text>
+
+        <!-- PROXMOX NODE (green, big panel) -->
+        <rect x="730" y="110" width="240" height="470" rx="10" fill="rgba(57,211,83,0.05)" stroke="#39d353" stroke-width="1" stroke-dasharray="8,4"/>
+        <text x="742" y="128" fill="#39d353" font-size="10" font-weight="600">Proxmox Node (hypervisor)</text>
+
+        <rect x="750" y="145" width="200" height="58" rx="6" fill="#161b22" stroke="#39d353" stroke-width="1.5"/>
+        <text x="850" y="170" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">FiveM VM</text>
+        <text x="850" y="186" fill="#8a8d93" font-size="9" text-anchor="middle">GTA V roleplay</text>
+        <text x="850" y="200" fill="#8a8d93" font-size="9" text-anchor="middle">:30120 (LinuxGSM)</text>
+
+        <rect x="750" y="215" width="200" height="58" rx="6" fill="#161b22" stroke="#39d353" stroke-width="1.5"/>
+        <text x="850" y="240" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">DayZ VM</text>
+        <text x="850" y="256" fill="#8a8d93" font-size="9" text-anchor="middle">survival server</text>
+        <text x="850" y="270" fill="#8a8d93" font-size="9" text-anchor="middle">:2302 (LinuxGSM)</text>
+
+        <rect x="750" y="285" width="200" height="58" rx="6" fill="#161b22" stroke="#39d353" stroke-width="1.5"/>
+        <text x="850" y="310" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">GTA CT</text>
+        <text x="850" y="326" fill="#8a8d93" font-size="9" text-anchor="middle">crew / container</text>
+        <text x="850" y="340" fill="#8a8d93" font-size="9" text-anchor="middle">:6672</text>
+
+        <rect x="750" y="355" width="200" height="58" rx="6" fill="#161b22" stroke="#39d353" stroke-width="1.5"/>
+        <text x="850" y="380" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">Arc Raiders</text>
+        <text x="850" y="396" fill="#8a8d93" font-size="9" text-anchor="middle">crew hub</text>
+        <text x="850" y="410" fill="#8a8d93" font-size="9" text-anchor="middle">:27015</text>
+
+        <rect x="750" y="425" width="200" height="58" rx="6" fill="#161b22" stroke="#ffb000" stroke-width="1.5"/>
+        <text x="850" y="450" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">Status API</text>
+        <text x="850" y="466" fill="#8a8d93" font-size="9" text-anchor="middle">knuckls_status.py</text>
+        <text x="850" y="480" fill="#8a8d93" font-size="9" text-anchor="middle">:8080 /status.json</text>
+
+        <rect x="750" y="495" width="200" height="58" rx="6" fill="#161b22" stroke="#39d353" stroke-width="1.5"/>
+        <text x="850" y="520" fill="#e6edf3" font-size="11" font-weight="600" text-anchor="middle">Plex / Storage</text>
+        <text x="850" y="536" fill="#8a8d93" font-size="9" text-anchor="middle">media + backups</text>
+        <text x="850" y="550" fill="#8a8d93" font-size="9" text-anchor="middle">NAS / HDD</text>
+
+        <!-- ARROWS -->
+        <!-- players -> internet -> modem -->
+        <line x1="170" y1="152" x2="198" y2="290" stroke="#8a8d93" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <line x1="160" y1="303" x2="208" y2="303" stroke="#ffb000" stroke-width="1.5" marker-end="url(#arrowA)"/>
+        <text x="190" y="296" fill="#8a8d93" font-size="8" text-anchor="middle">WAN</text>
+        <!-- modem -> pfsense -->
+        <line x1="320" y1="303" x2="368" y2="303" stroke="#ffb000" stroke-width="1.5" marker-end="url(#arrowA)"/>
+        <!-- pfsense -> switch -->
+        <line x1="500" y1="303" x2="558" y2="303" stroke="#39d353" stroke-width="1.5" marker-end="url(#arrowG)"/>
+        <!-- switch -> proxmox -->
+        <line x1="680" y1="303" x2="728" y2="303" stroke="#39d353" stroke-width="1.5" marker-end="url(#arrowG)"/>
+
+        <!-- knuckls.com -> internet (status fetch out) -->
+        <line x1="110" y1="430" x2="100" y2="332" stroke="#8a8d93" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <!-- status api -> out to knuckls.com via nat -->
+        <path d="M 750 454 L 690 454 Q 660 454 660 420 L 660 360 Q 660 330 630 330 L 500 330 Q 435 330 435 311 L 435 351 Q 435 403 370 403 L 268 403 Q 200 403 200 388 L 200 350" fill="none" stroke="#ffb000" stroke-width="1.5" stroke-dasharray="6,4" marker-end="url(#arrowA)"/>
+        <text x="430" y="345" fill="#ffb000" font-size="8" text-anchor="middle">HTTPS /status.json</text>
+        <text x="430" y="358" fill="#ffb000" font-size="8" text-anchor="middle">(Hostinger DNS A record)</text>
+
+        <!-- players connect to game servers (down into proxmox) -->
+        <path d="M 170 184 L 320 184 Q 400 184 400 230 L 400 540 Q 400 588 470 588 L 728 588" fill="none" stroke="#8a8d93" stroke-width="1.5" stroke-dasharray="5,5" marker-end="url(#arrow)"/>
+        <text x="250" y="200" fill="#8a8d93" font-size="8" text-anchor="middle">game connect</text>
+
+        <!-- LEGEND -->
+        <rect x="40" y="540" width="200" height="90" rx="8" fill="#161b22" stroke="#21262d" stroke-width="1"/>
+        <text x="52" y="558" fill="#e6edf3" font-size="10" font-weight="600">Legend</text>
+        <rect x="52" y="568" width="16" height="10" rx="2" fill="#161b22" stroke="#8a8d93" stroke-width="1"/>
+        <text x="74" y="576" fill="#8a8d93" font-size="8">External (Internet / Hostinger)</text>
+        <rect x="52" y="584" width="16" height="10" rx="2" fill="#161b22" stroke="#ffb000" stroke-width="1"/>
+        <text x="74" y="592" fill="#8a8d93" font-size="8">Edge / firewall / status API</text>
+        <rect x="52" y="600" width="16" height="10" rx="2" fill="#161b22" stroke="#39d353" stroke-width="1"/>
+        <text x="74" y="608" fill="#8a8d93" font-size="8">LAN / Proxmox / game servers</text>
+        <line x1="52" y1="618" x2="68" y2="618" stroke="#ffb000" stroke-width="1.5" stroke-dasharray="5,4"/>
+        <text x="74" y="621" fill="#8a8d93" font-size="8">Status feed path</text>
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-header"><div class="card-dot amber"></div><h3>Edge &amp; Network</h3></div>
+        <ul>
+          <li>• Modem → pfSense (NAT, port forward, DHCP/DNS)</li>
+          <li>• Switch feeds the Proxmox node at 1 Gbps</li>
+          <li>• pfSense is the only thing facing the WAN</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot green"></div><h3>Compute</h3></div>
+        <ul>
+          <li>• Proxmox hypervisor runs the game-server VMs</li>
+          <li>• FiveM / DayZ via LinuxGSM, GTA + Arc crew</li>
+          <li>• Plex / NAS for media + backups</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-dot slate"></div><h3>Exposure to knuckls.com</h3></div>
+        <ul>
+          <li>• Status API (:8080) served over HTTPS</li>
+          <li>• Hostinger DNS: status.knuckls.com → home IP</li>
+          <li>• knuckls.com (Hostinger WP) fetches /status.json</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer">Knuckls Home Lab • generated for knuckls.com (Hostinger + Elementor)</p>
+  </div>
+</body>
+</html>
