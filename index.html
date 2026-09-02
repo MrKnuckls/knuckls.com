@@ -368,7 +368,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
   <div class="container">
     <div class="section-label">/// servers</div>
     <h2 class="section-title">My servers</h2>
-    <p class="section-sub">Five boxes live in my home lab. Jump on, bring your crew. Rules: don't cheat, don't be a wipe — instant ban, no appeals.</p>
+    <p class="section-sub">All five run on <strong>Pterodactyl</strong> (Steam servers) behind a <strong>Cloudflare Tunnel</strong> — reachable but tucked away.</p>
     <div class="servers-grid" id="serversGrid">
       <div class="server-card" data-server="palworld">
         <div class="server-header">
@@ -378,9 +378,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <div class="server-status">
           <span class="dot checking"></span>
           <span class="checking">CHECKING</span>
-          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
-        <div class="server-connect">connect knuckls.com:8211</div>
         <div class="server-players">😮 Casual/co-op | Max Pals enabled | Friendly base building</div>
       </div>
       <div class="server-card" data-server="starrupture">
@@ -391,9 +389,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <div class="server-status">
           <span class="dot checking"></span>
           <span class="checking">CHECKING</span>
-          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
-        <div class="server-connect">connect knuckls.com:7777</div>
         <div class="server-players">🌟 Extraction survival | PvPvE | Sci-fi frontier</div>
       </div>
       <div class="server-card" data-server="arma">
@@ -404,9 +400,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <div class="server-status">
           <span class="dot checking"></span>
           <span class="checking">CHECKING</span>
-          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
-        <div class="server-connect">connect knuckls.com:2001</div>
         <div class="server-players">🪖 Combined arms | Modded scenarios | Persistent PvP</div>
       </div>
       <div class="server-card" data-server="dayz">
@@ -417,9 +411,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <div class="server-status">
           <span class="dot checking"></span>
           <span class="checking">CHECKING</span>
-          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
-        <div class="server-connect">connect knuckls.com:2302</div>
         <div class="server-players">🧟 ZOMBIES | PvPvE | Modded loot | Party system</div>
       </div>
       <div class="server-card" data-server="hytale">
@@ -430,9 +422,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <div class="server-status">
           <span class="dot checking"></span>
           <span class="checking">CHECKING</span>
-          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
-        <div class="server-connect">connect knuckls.com:25565</div>
         <div class="server-players">🏔️ Sandbox adventure | Modding | Procedural worlds</div>
       </div>
     </div>
@@ -533,10 +523,11 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <p>Proxmox virtualization host running five VMs — game servers, Docker host, pfSense firewall, and a NAS for backups. The whole setup pulls about 200W and sits in my office closet.</p>
         <ul>
           <li><span class="check">✓</span> Proxmox VE 9.2 — main hypervisor</li>
-          <li><span class="check">✓</span> Docker Swarm — game server containers</li>
+          <li><span class="check">✓</span> Docker + Pterodactyl — game server panel</li>
           <li><span class="check">✓</span> pfSense — VLANs, firewall, Pi-hole DNS</li>
+          <li><span class="check">✓</span> Cloudflare Tunnel — secure ingress</li>
           <li><span class="check">✓</span> Status server — live green/red dot feed</li>
-          <li><span class="check">✓</span> Game servers — FiveM, DayZ, more</li>
+          <li><span class="check">✓</span> Game servers — Arma, PalWorld, DayZ, more</li>
           <li><span class="check">✓</span> UPS backup — 30 min runtime on outage</li>
         </ul>
       </div>
@@ -698,11 +689,9 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 
 // Live server status via PHP ping
 (async function(){
-  const config = [
-    { id:'fivem', host:'127.0.0.1', port:30120, label:'Knuckls RP', game:'FiveM', desc:'🔫 Serious RP | Whitelisted | Active staff', connect:'connect knuckls.com:30120' },
-    { id:'dayz', host:'127.0.0.1', port:2302, label:'Survival Zone', game:'DayZ', desc:'🏚️ PvPvE | Modded loot | Party system', connect:'connect knuckls.com:2302' },
-    { id:'arc', host:'127.0.0.1', port:27015, label:'Knuckls Crew', game:'Arc Raiders', desc:'🎯 Duo/squad focused | Learning the maps', connect:'Friend code: KNUCKLS-ARC' }
-  ];
+  // Live server status via PHP ping
+(async function(){
+  const serverIds = ['palworld','starrupture','arma','dayz','hytale'];
 
   function updateCard(id, status, players, maxPlayers){
     const card = document.querySelector(`[data-server="${id}"]`);
@@ -715,30 +704,29 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       dot.className = 'dot online';
       label.className = 'online';
       label.textContent = 'ONLINE';
-      pc.textContent = players ? `${players}/${maxPlayers || '?'} players` : '—';
+      if(pc) pc.textContent = players ? `${players}/${maxPlayers || '?'} players` : '—';
     } else if(status === 'offline'){
       dot.className = 'dot offline';
       label.className = 'offline';
       label.textContent = 'OFFLINE';
-      pc.textContent = '—';
+      if(pc) pc.textContent = '—';
     } else {
       dot.className = 'dot checking';
       label.className = 'checking';
       label.textContent = 'CHECKING';
-      pc.textContent = '—';
+      if(pc) pc.textContent = '—';
     }
   }
 
   async function checkAll(){
-    for(const srv of config){
-      updateCard(srv.id, 'checking');
+    for(const id of serverIds){
+      updateCard(id, 'checking');
       try{
-        // Try PHP ping script
-        const resp = await fetch(`/ping.php?host=${srv.host}&port=${srv.port}`, {signal:AbortSignal.timeout(5000)});
+        const resp = await fetch(`/ping.php?server=${id}`, {signal:AbortSignal.timeout(5000)});
         const data = await resp.json();
-        updateCard(srv.id, data.online ? 'online' : 'offline', data.players, data.max_players);
+        updateCard(id, data.online ? 'online' : 'offline', data.players, data.max_players);
       } catch(e){
-        updateCard(srv.id, 'offline');
+        updateCard(id, 'offline');
       }
     }
   }

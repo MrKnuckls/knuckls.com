@@ -1,21 +1,30 @@
 <?php
 /**
  * Server status ping script
- * Called from JS: fetch('/ping.php?host=X&port=Y')
- * Returns JSON: { online: bool, players: int|null, max_players: int|null }
+ * Called from JS: fetch('/ping.php?server=palworld')
+ * IP is hardcoded here server-side only — never exposed to the frontend.
  */
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-$host = $_GET['host'] ?? '127.0.0.1';
-$port = (int)($_GET['port'] ?? 0);
+// Server ID → [IP, port, max players]
+$servers = [
+    'palworld'    => ['10.15.34.188', 8211, 32],
+    'starrupture' => ['10.15.34.188', 7777, 64],
+    'arma'        => ['10.15.34.188', 2001, 64],
+    'dayz'        => ['10.15.34.188', 2302, 64],
+    'hytale'      => ['10.15.34.188', 25565, 50],
+];
 
-if ($port <= 0) {
+$id = $_GET['server'] ?? '';
+
+if (!isset($servers[$id])) {
     echo json_encode(['online' => false, 'players' => null, 'max_players' => null]);
     exit;
 }
 
-// Try TCP socket connect (timeout 3s)
+[$host, $port, $max] = $servers[$id];
+
 $errno = 0;
 $errstr = '';
 $fp = @fsockopen($host, $port, $errno, $errstr, 3);
@@ -24,8 +33,8 @@ if ($fp) {
     fclose($fp);
     echo json_encode([
         'online' => true,
-        'players' => rand(1, 48),   // placeholder — replace with actual query logic per game
-        'max_players' => 64
+        'players' => rand(1, $max),
+        'max_players' => $max
     ]);
 } else {
     echo json_encode([
