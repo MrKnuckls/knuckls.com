@@ -263,6 +263,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <li><a href="#blog">Dev Blog</a></li>
       <li><a href="#lab">Lab</a></li>
       <li><a href="#connect">Connect</a></li>
+      <li><a href="#console">Console</a></li>
       <li><button class="theme-toggle" id="themeToggle" title="Toggle theme">☀️</button></li>
     </ul>
   </div>
@@ -587,6 +588,67 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
   </div>
 </section>
 
+<!-- CONSOLE / COMMAND CENTER -->
+<section id="console" style="display:none">
+  <div class="container">
+    <div class="section-label">/// console</div>
+    <h2 class="section-title">Command Center</h2>
+    <p class="section-sub">Password-protected server dashboard — manage all servers from one place.</p>
+    
+    <!-- Password gate -->
+    <div id="consoleGate" style="max-width:400px;margin:0 auto;text-align:center;padding:60px 0">
+      <div style="font-size:3rem;margin-bottom:16px">🔐</div>
+      <h3 style="font-family:var(--font-head);font-weight:600;margin-bottom:8px">Enter passkey</h3>
+      <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:24px">This dashboard is for server admins only.</p>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <input type="password" id="consolePass" placeholder="Passkey" 
+          style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--font-mono);font-size:.9rem;width:200px;outline:none">
+        <button class="btn btn-primary" id="consoleUnlock" style="padding:10px 20px;font-size:.85rem">Unlock</button>
+      </div>
+      <p id="consoleFail" style="color:var(--red);font-size:.8rem;margin-top:12px;display:none">Wrong passkey</p>
+    </div>
+    
+    <!-- Dashboard (hidden until authed) -->
+    <div id="consoleDash" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+        <div style="display:flex;gap:16px">
+          <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--accent)" id="consoleStatus">● monitoring</span>
+          <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted)" id="consoleLast">last: —</span>
+        </div>
+        <button class="btn btn-outline" id="consoleRefresh" style="padding:6px 16px;font-size:.8rem">↻ Refresh</button>
+      </div>
+      
+      <div class="servers-grid" id="consoleGrid">
+        <!-- Filled by JS -->
+      </div>
+      
+      <!-- Action feedback -->
+      <div id="consoleToast" style="display:none;position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:10px 20px;font-size:.85rem;z-index:999;animation:fadeIn .3s"></div>
+    </div>
+  </div>
+</section>
+
+<style>
+#console{transition:opacity .3s}
+#console input:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow)}
+#console .server-card{position:relative}
+#console .server-card .resource-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+#console .server-card .resource-item{flex:1;min-width:80px}
+#console .server-card .resource-item .r-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted)}
+#console .server-card .resource-item .r-bar{height:4px;background:var(--border);border-radius:2px;margin:4px 0;overflow:hidden}
+#console .server-card .resource-item .r-bar .r-fill{height:100%;border-radius:2px;transition:width .5s}
+#console .server-card .resource-item .r-val{font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted)}
+#console .actions-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+#console .actions-row .btn{font-size:.72rem;padding:4px 10px;font-family:var(--font-mono)}
+#console .btn-start{color:var(--accent);border-color:rgba(57,211,53,.3)}
+#console .btn-start:hover{background:rgba(57,211,53,.1);border-color:var(--accent)}
+#console .btn-stop{color:var(--red);border-color:rgba(255,85,85,.3)}
+#console .btn-stop:hover{background:rgba(255,85,85,.1);border-color:var(--red)}
+#console .btn-restart{color:var(--secondary);border-color:rgba(255,176,0,.3)}
+#console .btn-restart:hover{background:rgba(255,176,0,.1);border-color:var(--secondary)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
@@ -688,8 +750,6 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 })();
 
 // Live server status via PHP ping
-(async function(){
-  // Live server status via PHP ping
 (async function(){
   const serverIds = ['palworld','starrupture','arma','dayz','hytale'];
 
@@ -806,6 +866,185 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
   el.style.transition = 'opacity .6s ease, transform .6s ease';
   observer.observe(el);
 });
+
+// ─── COMMAND CENTER ───────────────────────────────
+(function(){
+  const PASS = 'knuckls2026';
+  const section = document.getElementById('console');
+  const gate   = document.getElementById('consoleGate');
+  const dash   = document.getElementById('consoleDash');
+  const grid   = document.getElementById('consoleGrid');
+  const input  = document.getElementById('consolePass');
+  const unlock = document.getElementById('consoleUnlock');
+  const fail   = document.getElementById('consoleFail');
+  const status = document.getElementById('consoleStatus');
+  const last   = document.getElementById('consoleLast');
+  const toast  = document.getElementById('consoleToast');
+  const serverIds = ['palworld','starrupture','arma','dayz','hytale'];
+  let authed = false;
+  let timer = null;
+
+  // Password unlock
+  async function tryUnlock(){
+    const pass = input.value.trim();
+    if(!pass) return;
+    try {
+      const r = await fetch(`/console.php?action=auth&pass=${encodeURIComponent(pass)}`);
+      const d = await r.json();
+      if(d.authed){
+        authed = true;
+        gate.style.display = 'none';
+        dash.style.display = 'block';
+        fetchStatus();
+        timer = setInterval(fetchStatus, 15000);
+      } else {
+        fail.style.display = 'block';
+        input.value = '';
+        input.focus();
+      }
+    } catch(e){
+      fail.textContent = 'Connection error';
+      fail.style.display = 'block';
+    }
+  }
+
+  unlock.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', e => { if(e.key==='Enter') tryUnlock(); });
+
+  // Fetch status from console.php
+  async function fetchStatus(){
+    if(!authed) return;
+    try {
+      const r = await fetch(`/console.php?action=status&pass=${encodeURIComponent(PASS)}`, {signal:AbortSignal.timeout(8000)});
+      const data = await r.json();
+      renderGrid(data);
+      status.textContent = '● monitoring';
+      last.textContent = `last: ${new Date().toLocaleTimeString()}`;
+    } catch(e){
+      status.textContent = '● error';
+    }
+  }
+
+  // Render server cards with resources + actions
+  function renderGrid(data){
+    grid.innerHTML = serverIds.map(id => {
+      const s = data[id] || {};
+      const state = s.state || 'offline';
+      const isOn = s.online === true;
+      const cpuPct = Math.min((s.cpu || 0), 100);
+      const hasRamLimit = s.ram_limit && s.ram_limit > 0;
+      const hasDiskLimit = s.disk_limit && s.disk_limit > 0;
+      const ramPct = hasRamLimit ? Math.min((s.ram / s.ram_limit) * 100, 100) : -1;
+      const diskPct = hasDiskLimit ? Math.min((s.disk / s.disk_limit) * 100, 100) : -1;
+      const ramStr = s.ram ? (s.ram / 1048576).toFixed(0) + 'MB' : '—';
+      const ramMax = hasRamLimit ? '/' + (s.ram_limit / 1048576).toFixed(0) + 'MB' : '';
+      const diskStr = s.disk ? (s.disk / 1073741824).toFixed(1) + 'GB' : '—';
+      const diskMax = hasDiskLimit ? '/' + (s.disk_limit / 1073741824).toFixed(1) + 'GB' : '';
+      const gameIcon = {'PalWorld':'😮','StarRupture':'🌟','Arma Reforger':'🪖','DayZ':'🧟','Hytale':'🏔️'};
+      const icon = gameIcon[s.game] || '🎮';
+
+      return `<div class="server-card" data-console="${id}">
+        <div class="server-header">
+          <span class="server-name">${id === 'palworld' ? 'Knuckls Palworld' : id === 'starrupture' ? 'Knuckls_StarRupture' : id === 'arma' ? 'Knuckls Arma Reforger Server' : id === 'dayz' ? 'Knuckls DayZ Server' : 'knucklsHytale'}</span>
+          <span class="server-game">${icon} ${s.game || ''}</span>
+        </div>
+        <div class="server-status">
+          <span class="dot ${isOn ? 'online' : 'offline'}"></span>
+          <span class="${isOn ? 'online' : 'offline'}">${isOn ? 'RUNNING' : state.toUpperCase()}</span>
+        </div>
+        <div class="resource-row">
+          <div class="resource-item">
+            <div class="r-label">CPU</div>
+            <div class="r-bar"><div class="r-fill" style="width:${cpuPct}%;background:${cpuPct > 80 ? 'var(--red)' : cpuPct > 50 ? 'var(--secondary)' : 'var(--accent)'}"></div></div>
+            <div class="r-val">${cpuPct.toFixed(1)}%</div>
+          </div>
+          <div class="resource-item">
+            <div class="r-label">RAM</div>
+            <div class="r-bar"><div class="r-fill" style="width:${ramPct}%;background:${ramPct > 80 ? 'var(--red)' : ramPct > 50 ? 'var(--secondary)' : 'var(--accent)'}"></div></div>
+            <div class="r-val">${ramStr} ${ramMax}</div>
+          </div>
+          <div class="resource-item">
+            <div class="r-label">DISK</div>
+            <div class="r-bar"><div class="r-fill" style="width:${diskPct}%;background:${diskPct > 80 ? 'var(--red)' : diskPct > 50 ? 'var(--secondary)' : 'var(--accent)'}"></div></div>
+            <div class="r-val">${diskStr} ${diskMax}</div>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button class="btn btn-outline btn-start" data-action="start" data-server="${id}" ${isOn ? 'disabled style="opacity:.3"' : ''}>▶ Start</button>
+          <button class="btn btn-outline btn-stop" data-action="stop" data-server="${id}" ${!isOn ? 'disabled style="opacity:.3"' : ''}>■ Stop</button>
+          <button class="btn btn-outline btn-restart" data-action="restart" data-server="${id}" ${!isOn ? 'disabled style="opacity:.3"' : ''}>↻ Restart</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Wire action buttons
+    grid.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', async function(){
+        const server = this.dataset.server;
+        const signal = this.dataset.action;
+        const origText = this.textContent;
+        this.textContent = '...';
+        this.disabled = true;
+        try {
+          const r = await fetch(`/console.php?action=power&server=${server}&signal=${signal}&pass=${encodeURIComponent(PASS)}`);
+          const d = await r.json();
+          showToast(d.ok ? `${signal} sent to ${server}` : `Failed: ${d.msg || 'error'}`);
+          setTimeout(fetchStatus, 2000);
+        } catch(e){
+          showToast('Connection error');
+        }
+        this.textContent = origText;
+        this.disabled = false;
+      });
+    });
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+  }
+
+  // Refresh button
+  document.getElementById('consoleRefresh')?.addEventListener('click', fetchStatus);
+
+  // Show section when nav link clicked
+  document.querySelector('a[href="#console"]')?.addEventListener('click', function(e){
+    e.preventDefault();
+    section.style.display = 'block';
+    document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = 'none'; });
+    document.getElementById('navLinks').classList.remove('open');
+    window.scrollTo(0, 0);
+  });
+
+  // Pause monitoring when leaving
+  window.addEventListener('hashchange', ()=>{
+    if(window.location.hash !== '#console' && timer){
+      clearInterval(timer);
+      timer = null;
+    }
+    if(window.location.hash === '#console'){
+      section.style.display = 'block';
+      document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = 'none'; });
+      if(!authed && gate.style.display !== 'none'){
+        // stays on gate
+      } else if(authed){
+        fetchStatus();
+        timer = setInterval(fetchStatus, 15000);
+      }
+    } else if(window.location.hash){
+      section.style.display = 'none';
+      document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = ''; });
+    }
+  });
+
+  // On page load, check hash
+  if(window.location.hash === '#console'){
+    section.style.display = 'block';
+    document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = 'none'; });
+    setTimeout(() => input?.focus(), 300);
+  }
+})();
 </script>
 </body>
 </html>
