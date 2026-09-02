@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KNUCKLS — Gamer. Server host. Lab rat.</title>
+<meta name="description" content="Shaun (MrKnuckls) — games, servers, home lab, projects.">
+<link rel="icon" href="assets/img/knuckls-fist-badge.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;
+  --surface:#161b22;
+  --surface-hover:#1c2333;
+  --text:#e6edf3;
+  --text-muted:#8b949e;
+  --accent:#39d353;
+  --accent-glow:rgba(57,211,83,.35);
+  --secondary:#ffb000;
+  --secondary-dim:rgba(255,176,0,.15);
+  --border:#30363d;
+  --red:#ff5555;
+  --font-head:'Rajdhani',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --nav-h:64px
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+a{color:var(--accent);text-decoration:none;transition:color .2s}
+a:hover{color:#4be06a}
+img{max-width:100%;height:auto;display:block}
+::selection{background:var(--accent);color:var(--bg)}
+
+/* canvas background */
+#matrix-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.12}
+
+/* nav */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:rgba(13,17,23,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:0 24px}
+nav .nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;width:100%}
+nav .logo{display:flex;align-items:center;gap:10px;font-family:var(--font-head);font-weight:700;font-size:1.4rem;color:var(--text)}
+nav .logo img{height:32px;width:auto}
+nav .nav-links{display:flex;gap:28px;list-style:none}
+nav .nav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;transition:color .2s;position:relative}
+nav .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;background:var(--accent);transition:width .2s}
+nav .nav-links a:hover{color:var(--text)}
+nav .nav-links a:hover::after{width:100%}
+.nav-toggle{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.nav-toggle span{display:block;width:24px;height:2px;background:var(--accent);transition:.3s}
+
+/* sections */
+section{position:relative;z-index:1;padding:100px 24px}
+section .container{max-width:1100px;margin:0 auto}
+.section-label{font-family:var(--font-mono);font-size:.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px}
+.section-title{font-family:var(--font-head);font-weight:700;font-size:clamp(1.8rem,4vw,2.8rem);color:var(--text);margin-bottom:16px}
+.section-sub{color:var(--text-muted);font-size:1.05rem;max-width:640px;margin-bottom:48px}
+
+/* hero */
+#hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding-top:var(--nav-h);position:relative;z-index:1;overflow:hidden}
+#hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(57,211,83,.06),transparent 70%);pointer-events:none}
+.hero-content{position:relative}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--secondary-dim);border:1px solid rgba(255,176,0,.25);border-radius:100px;padding:6px 16px 6px 8px;font-size:.75rem;color:var(--secondary);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:32px}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--secondary);animation:pulse-dot 2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-logo{width:clamp(120px,15vw,200px);margin:0 auto 24px;filter:drop-shadow(0 0 30px var(--accent-glow))}
+.hero-title{font-family:var(--font-head);font-weight:700;font-size:clamp(3rem,10vw,7rem);line-height:1;color:var(--text);margin-bottom:16px;letter-spacing:.02em}
+.hero-title .highlight{color:var(--accent)}
+.hero-tagline{font-family:var(--font-mono);font-size:clamp(.9rem,2vw,1.3rem);color:var(--accent);margin-bottom:8px;min-height:1.4em}
+.hero-tagline .cursor{display:inline-block;width:2px;height:1em;background:var(--accent);margin-left:4px;vertical-align:text-bottom;animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.hero-desc{color:var(--text-muted);font-size:clamp(.95rem,1.2vw,1.1rem);max-width:560px;margin:24px auto 40px}
+.hero-cta{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:8px;font-weight:600;font-size:.95rem;font-family:var(--font-head);text-transform:uppercase;letter-spacing:.06em;transition:all .2s;cursor:pointer;border:none;text-decoration:none}
+.btn-primary{background:var(--accent);color:var(--bg);box-shadow:0 0 20px var(--accent-glow)}
+.btn-primary:hover{background:#4be06a;box-shadow:0 0 30px rgba(57,211,83,.5);transform:translateY(-2px);color:var(--bg)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+.btn-amber{background:var(--secondary);color:var(--bg)}
+.btn-amber:hover{background:#ffc233;transform:translateY(-2px);color:var(--bg)}
+.scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-muted);font-size:.75rem;font-family:var(--font-mono);animation:bounce 2s ease-in-out infinite}
+.scroll-hint .arrow{width:16px;height:16px;border-right:2px solid var(--text-muted);border-bottom:2px solid var(--text-muted);transform:rotate(45deg)}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+
+/* about */
+#about{background:linear-gradient(180deg,var(--bg),var(--surface),var(--bg))}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.about-text p{color:var(--text-muted);font-size:1rem;margin-bottom:16px}
+.about-text p strong{color:var(--text)}
+.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.stat-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:border-color .2s}
+.stat-card:hover{border-color:var(--accent)}
+.stat-num{font-family:var(--font-head);font-weight:700;font-size:2rem;color:var(--accent)}
+.stat-label{font-size:.8rem;color:var(--text-muted);margin-top:4px}
+
+/* games */
+#games{background:var(--bg)}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.game-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all .3s;position:relative;overflow:hidden}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.game-card:hover::before{transform:scaleX(1)}
+.game-card:hover{border-color:var(--accent);background:var(--surface-hover);transform:translateY(-4px);box-shadow:0 8px 40px rgba(57,211,53,.08)}
+.game-icon{font-size:2.5rem;margin-bottom:12px}
+.game-card h3{font-family:var(--font-head);font-weight:700;font-size:1.3rem;margin-bottom:6px}
+.game-card p{color:var(--text-muted);font-size:.88rem;line-height:1.5;margin-bottom:12px}
+.game-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.game-tags span{font-family:var(--font-mono);font-size:.7rem;padding:3px 8px;border-radius:4px;background:rgba(57,211,53,.1);color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
+.game-server-link{font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px;transition:color .2s}
+.game-server-link:hover{color:var(--accent)}
+
+/* servers */
+#servers{background:var(--surface)}
+.servers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.server-card{background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:24px;transition:all .2s}
+.server-card:hover{border-color:var(--accent);box-shadow:0 4px 24px rgba(57,211,53,.06)}
+.server-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.server-name{font-family:var(--font-head);font-weight:700;font-size:1.15rem;color:var(--text)}
+.server-game{font-size:.8rem;color:var(--text-muted);background:rgba(139,148,158,.12);padding:3px 10px;border-radius:100px}
+.server-status{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:.75rem;margin-bottom:10px}
+.server-status .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.server-status .dot.online{background:var(--accent);box-shadow:0 0 8px var(--accent-glow);animation:pulse-dot 2s ease-in-out infinite}
+.server-status .dot.offline{background:var(--red)}
+.server-status .online{color:var(--accent)}
+.server-status .offline{color:var(--red)}
+.server-connect{font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);background:rgba(13,17,23,.5);padding:8px 12px;border-radius:6px;border:1px solid var(--border);margin-bottom:10px;word-break:break-all}
+.server-players{font-size:.82rem;color:var(--text-muted);margin-bottom:14px}
+.server-rules{font-size:.8rem;color:var(--text-muted);padding-left:16px;margin-bottom:0}
+.server-rules li{margin-bottom:4px;list-style:disc}
+
+/* projects */
+#projects{background:var(--bg)}
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px}
+.project-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:all .3s}
+.project-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 8px 40px rgba(57,211,53,.08)}
+.project-card-img{height:200px;background:linear-gradient(135deg,#0d1117,#161b22);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
+.project-card-img .placeholder-icon{font-size:4rem;opacity:.3}
+.project-card-body{padding:24px}
+.project-card-body .tag{display:inline-block;font-family:var(--font-mono);font-size:.7rem;padding:3px 8px;border-radius:4px;background:rgba(57,211,53,.1);color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.project-card-body h3{font-family:var(--font-head);font-weight:700;font-size:1.2rem;margin-bottom:8px}
+.project-card-body p{color:var(--text-muted);font-size:.88rem;line-height:1.5;margin-bottom:12px}
+.project-card-body .status-bar{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text-muted)}
+.project-card-body .status-bar .bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.project-card-body .status-bar .bar-fill{height:100%;background:var(--accent);border-radius:2px;width:35%}
+
+/* lab */
+#lab{background:var(--surface)}
+.lab-content{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.lab-desc p{color:var(--text-muted);font-size:.95rem;margin-bottom:16px}
+.lab-desc ul{list-style:none;padding:0}
+.lab-desc li{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.88rem;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.lab-desc li:last-child{border-bottom:none}
+.lab-desc li .check{color:var(--accent);font-weight:700}
+.lab-image-wrap{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.lab-image-wrap img{border-radius:8px;width:100%}
+.lab-image-wrap .caption{font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);margin-top:10px}
+
+/* connect */
+#connect{background:var(--bg);padding-bottom:80px}
+.connect-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:700px;margin:0 auto}
+.connect-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.connect-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 20px rgba(57,211,53,.08)}
+.connect-card .icon{font-size:2rem}
+.connect-card .label{font-family:var(--font-head);font-weight:600;font-size:1rem;color:var(--text)}
+.connect-card .handle{font-size:.8rem;color:var(--text-muted)}
+.connect-card .btn{width:100%;justify-content:center;margin-top:8px}
+
+/* footer */
+footer{position:relative;z-index:1;background:var(--surface);border-top:1px solid var(--border);padding:40px 24px;text-align:center}
+footer .footer-inner{max-width:1100px;margin:0 auto}
+footer .footer-logo{margin:0 auto 16px;width:48px;opacity:.5}
+footer .footer-tagline{font-family:var(--font-head);font-size:1.1rem;color:var(--text-muted);margin-bottom:16px}
+footer .footer-links{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+footer .footer-links a{color:var(--text-muted);font-size:.85rem;transition:color .2s}
+footer .footer-links a:hover{color:var(--accent)}
+footer .copy{font-size:.78rem;color:var(--text-muted)}
+
+/* responsive */
+@media(max-width:768px){
+  nav .nav-links{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,17,23,.98);flex-direction:column;padding:24px;gap:16px;border-bottom:1px solid var(--border)}
+  nav .nav-links.open{display:flex}
+  .nav-toggle{display:flex}
+  .about-grid,.lab-content{grid-template-columns:1fr}
+  .about-stats{grid-template-columns:1fr 1fr}
+  section{padding:64px 16px}
+  #hero{min-height:90vh}
+}
+@media(max-width:480px){
+  .hero-cta{flex-direction:column;align-items:center}
+  .btn{width:100%;justify-content:center}
+  .games-grid,.servers-grid{grid-template-columns:1fr}
+  .projects-grid{grid-template-columns:1fr}
+  .connect-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#hero" class="logo">
+      <img src="assets/img/knuckls-fist-badge.png" alt="KNUCKLS">
+      KNUCKLS
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#games">Games</a></li>
+      <li><a href="#servers">Servers</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#lab">Lab</a></li>
+      <li><a href="#connect">Connect</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-content container">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Online &mdash; Dayton, OH
+    </div>
+    <img src="assets/img/knuckls-brass-K.png" alt="KNUCKLS" class="hero-logo">
+    <h1 class="hero-title">KNUCK<span class="highlight">LS</span></h1>
+    <div class="hero-tagline" id="typing-line">
+      <span id="typing-text"></span><span class="cursor"></span>
+    </div>
+    <p class="hero-desc">
+      I play hard, I host harder, and I keep the lights on in the home lab so the squad never drops.
+    </p>
+    <div class="hero-cta">
+      <a href="#servers" class="btn btn-primary">&#9654; Servers</a>
+      <a href="#connect" class="btn btn-outline">Join Discord</a>
+      <a href="#projects" class="btn btn-amber">&#9878; Projects</a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>scroll</span>
+    <div class="arrow"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="section-label">/// about</div>
+    <h2 class="section-title">Who I am</h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>What's good — I'm <strong>Shaun (MrKnuckls)</strong>, a PC gamer based in <strong>Dayton, Ohio</strong>. I spend my time deep in FiveM, DayZ, GTA, and Arc Raiders — and when I'm not playing, I'm hosting the servers we actually play on.</p>
+        <p>Everything runs out of my home lab, which is half battle-station, half science project. Proxmox, Docker, pfSense — the rack that keeps the servers online and the status feed green.</p>
+        <p>I'm also building <strong>SanRoque</strong>, a co-op open-world game in Unreal Engine 5. It's early days, but the vision is clear: a living world where you and your squad write the story.</p>
+        <p>This site is where you find my servers, what I'm into right now, and what's humming in the rack.</p>
+      </div>
+      <div class="about-stats">
+        <div class="stat-card"><div class="stat-num">4</div><div class="stat-label">Active Games</div></div>
+        <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">Hosted Servers</div></div>
+        <div class="stat-card"><div class="stat-num">1</div><div class="stat-label">UE5 Game in Dev</div></div>
+        <div class="stat-card"><div class="stat-num">∞</div><div class="stat-label">Lab Uptime</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GAMES -->
+<section id="games">
+  <div class="container">
+    <div class="section-label">/// games</div>
+    <h2 class="section-title">What I'm playing now</h2>
+    <p class="section-sub">Four games own most of my time. Every one has a server I host or play on.</p>
+    <div class="games-grid">
+      <div class="game-card">
+        <div class="game-icon">🎮</div>
+        <h3>FiveM</h3>
+        <p>GTA V turned into a roleplay sandbox. No scripted missions — just you, a city, and a hundred other stories happening at once.</p>
+        <div class="game-tags"><span>Roleplay</span><span>Multiplayer</span></div>
+        <a href="#servers" class="game-server-link">→ Server status</a>
+      </div>
+      <div class="game-card">
+        <div class="game-icon">🧟</div>
+        <h3>DayZ</h3>
+        <p>Spawn naked, survive zombies, get betrayed by friends, die to a broken leg. The most punishing survival game — the story is the prize.</p>
+        <div class="game-tags"><span>Survival</span><span>PvP</span></div>
+        <a href="#servers" class="game-server-link">→ Server status</a>
+      </div>
+      <div class="game-card">
+        <div class="game-icon">🏙️</div>
+        <h3>GTA</h3>
+        <p>Story mode heists by day, Online chaos by night. CEO crate runs, MC mischief, and the occasional Cayo Perico solo grind.</p>
+        <div class="game-tags"><span>Heist</span><span>Open World</span></div>
+        <a href="#servers" class="game-server-link">→ Server status</a>
+      </div>
+      <div class="game-card">
+        <div class="game-icon">⚡</div>
+        <h3>Arc Raiders</h3>
+        <p>PvPvE extraction shooter. Drop in, scavenge, fight AI and other players, extract with the loot — or lose it all. The tension is unreal.</p>
+        <div class="game-tags"><span>Extraction</span><span>PvPvE</span></div>
+        <a href="#servers" class="game-server-link">→ Server status</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVERS -->
+<section id="servers">
+  <div class="container">
+    <div class="section-label">/// servers</div>
+    <h2 class="section-title">My servers</h2>
+    <p class="section-sub">These boxes live in my home lab. Jump on, bring your crew. Rules: don't cheat, don't be a wipe — instant ban, no appeals.</p>
+    <div class="servers-grid">
+      <div class="server-card">
+        <div class="server-header">
+          <span class="server-name">Knuckls RP</span>
+          <span class="server-game">FiveM</span>
+        </div>
+        <div class="server-status">
+          <span class="dot online"></span>
+          <span class="online">ONLINE</span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)">42/64 players</span>
+        </div>
+        <div class="server-connect">connect knuckls.com:30120</div>
+        <div class="server-players">🔫 Serious RP | Whitelisted | Active staff</div>
+      </div>
+      <div class="server-card">
+        <div class="server-header">
+          <span class="server-name">Survival Zone</span>
+          <span class="server-game">DayZ</span>
+        </div>
+        <div class="server-status">
+          <span class="dot online"></span>
+          <span class="online">ONLINE</span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)">18/60 players</span>
+        </div>
+        <div class="server-connect">connect knuckls.com:2302</div>
+        <div class="server-players">🏚️ PvPvE | Modded loot | Party system</div>
+      </div>
+      <div class="server-card">
+        <div class="server-header">
+          <span class="server-name">Knuckls Crew</span>
+          <span class="server-game">Arc Raiders</span>
+        </div>
+        <div class="server-status">
+          <span class="dot online"></span>
+          <span class="online">RECRUITING</span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)">6 in crew</span>
+        </div>
+        <div class="server-connect">Friend code: KNUCKLS-ARC</div>
+        <div class="server-players">🎯 Duo/squad focused | Learning the maps</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="container">
+    <div class="section-label">/// projects</div>
+    <h2 class="section-title">What I'm building</h2>
+    <p class="section-sub">From Unreal Engine 5 to the home lab — everything I'm working on right now.</p>
+    <div class="projects-grid">
+      <div class="project-card">
+        <div class="project-card-img">
+          <div class="placeholder-icon">🎮</div>
+        </div>
+        <div class="project-card-body">
+          <span class="tag">In Development</span>
+          <h3>SanRoque</h3>
+          <p>A co-op open-world survival game built in Unreal Engine 5. Dynamic weather, deep crafting, persistent bases — a living world you and your squad write the story in.</p>
+          <div class="status-bar">
+            <span>Pre-Alpha</span>
+            <div class="bar"><div class="bar-fill" style="width:35%"></div></div>
+            <span>35%</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="project-card-img">
+          <div class="placeholder-icon">🖥️</div>
+        </div>
+        <div class="project-card-body">
+          <span class="tag">Live</span>
+          <h3>Home Lab</h3>
+          <p>Proxmox VE cluster, Docker swarm, pfSense firewall — the rack runs 24/7, hosting game servers, the status feed, and all my experiments.</p>
+          <div class="status-bar">
+            <span>Operational</span>
+            <div class="bar"><div class="bar-fill" style="width:100%;background:var(--accent)"></div></div>
+            <span class="online">&#9679; Online</span>
+          </div>
+        </div>
+      </div>
+      <div class="project-card">
+        <div class="project-card-img">
+          <div class="placeholder-icon">🌐</div>
+        </div>
+        <div class="project-card-body">
+          <span class="tag">Deployed</span>
+          <h3>knuckls.com</h3>
+          <p>This site — brand kit, status server, lab diagram, and full game/server hub. Built on the Terminal palette with the squad in mind.</p>
+          <div class="status-bar">
+            <span>Live</span>
+            <div class="bar"><div class="bar-fill" style="width:100%;background:var(--accent)"></div></div>
+            <span class="online">&#9679; Online</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LAB -->
+<section id="lab">
+  <div class="container">
+    <div class="section-label">/// lab</div>
+    <h2 class="section-title">The home lab</h2>
+    <p class="section-sub">Half battle-station, half science project. This rack powers everything.</p>
+    <div class="lab-content">
+      <div class="lab-desc">
+        <p>Proxmox virtualization host running five VMs — game servers, Docker host, pfSense firewall, and a NAS for backups. The whole setup pulls about 200W and sits in my office closet.</p>
+        <ul>
+          <li><span class="check">✓</span> Proxmox VE 9.2 — main hypervisor</li>
+          <li><span class="check">✓</span> Docker Swarm — game server containers</li>
+          <li><span class="check">✓</span> pfSense — VLANs, firewall, Pi-hole DNS</li>
+          <li><span class="check">✓</span> Status server — live green/red dot feed</li>
+          <li><span class="check">✓</span> Game servers — FiveM, DayZ, more</li>
+          <li><span class="check">✓</span> UPS backup — 30 min runtime on outage</li>
+        </ul>
+        <p style="margin-top:16px;font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted)">Uptime tracking &amp; live status coming soon to status.knuckls.com</p>
+      </div>
+      <div class="lab-image-wrap">
+        <a href="assets/img/knuckls-lab-network.png" target="_blank">
+          <img src="assets/knuckls-lab-network-transparent.png" alt="Home lab network diagram">
+        </a>
+        <div class="caption">Network topology — click to expand</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONNECT -->
+<section id="connect">
+  <div class="container" style="text-align:center">
+    <div class="section-label">/// connect</div>
+    <h2 class="section-title">Wanna play or just say hi?</h2>
+    <p class="section-sub" style="margin:0 auto 40px">Catch me on Discord, add me on Steam, or shoot an email.</p>
+    <div class="connect-grid">
+      <div class="connect-card">
+        <div class="icon">💬</div>
+        <div class="label">Discord</div>
+        <div class="handle">@MrKnuckls</div>
+        <a href="#" class="btn btn-primary" style="font-size:.8rem;padding:8px 16px">Join Server</a>
+      </div>
+      <div class="connect-card">
+        <div class="icon">🎮</div>
+        <div class="label">Steam</div>
+        <div class="handle">MrKnuckls</div>
+        <a href="#" class="btn btn-outline" style="font-size:.8rem;padding:8px 16px">Add me</a>
+      </div>
+      <div class="connect-card">
+        <div class="icon">📧</div>
+        <div class="label">Email</div>
+        <div class="handle">s.m.hunnewell@gmail.com</div>
+        <a href="mailto:s.m.hunnewell@gmail.com" class="btn btn-outline" style="font-size:.8rem;padding:8px 16px">Send mail</a>
+      </div>
+      <div class="connect-card">
+        <div class="icon">🐙</div>
+        <div class="label">GitHub</div>
+        <div class="handle">MrKnuckls</div>
+        <a href="https://github.com/MrKnuckls" class="btn btn-outline" style="font-size:.8rem;padding:8px 16px">Follow</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <img src="assets/img/knuckls-brass-K.png" alt="K" class="footer-logo">
+    <div class="footer-tagline">Gamer. Server host. Lab rat.</div>
+    <div class="footer-links">
+      <a href="#hero">Home</a>
+      <a href="#about">About</a>
+      <a href="#games">Games</a>
+      <a href="#servers">Servers</a>
+      <a href="#projects">Projects</a>
+      <a href="#lab">Lab</a>
+      <a href="#connect">Connect</a>
+    </div>
+    <div class="copy">&copy; 2026 Shaun (MrKnuckls). All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+// Matrix rain background
+(function(){
+  const c = document.getElementById('matrix-canvas');
+  const ctx = c.getContext('2d');
+  let W, H, cols, drops;
+
+  function resize(){
+    W = c.width = window.innerWidth;
+    H = c.height = window.innerHeight;
+    cols = Math.floor(W / 16);
+    drops = Array(cols).fill(1);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF<>/';
+
+  function draw(){
+    ctx.fillStyle = 'rgba(13,17,23,.05)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#39d353';
+    ctx.font = '14px monospace';
+
+    for(let i=0;i<drops.length;i++){
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(text, i * 16, drops[i] * 16);
+      if(drops[i] * 16 > H && Math.random() > .975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  setInterval(draw, 50);
+})();
+
+// Typewriter effect
+(function(){
+  const el = document.getElementById('typing-text');
+  const phrases = [
+    'Gamer. Server host. Lab rat.',
+    'I play hard, I host harder.',
+    'Welcome to the lab.',
+    'Squad up.'
+  ];
+  let idx=0, charIdx=0, dir=1;
+  function step(){
+    const phrase = phrases[idx];
+    if(dir===1){
+      charIdx++;
+      el.textContent = phrase.slice(0, charIdx);
+      if(charIdx===phrase.length) setTimeout(()=>{dir=-1;step()}, 1500);
+      else setTimeout(step, 60);
+    } else {
+      charIdx--;
+      el.textContent = phrase.slice(0, charIdx);
+      if(charIdx===0){ dir=1; idx=(idx+1)%phrases.length; setTimeout(step, 400); }
+      else setTimeout(step, 30);
+    }
+  }
+  step();
+})();
+
+// Mobile nav toggle
+document.getElementById('navToggle').addEventListener('click', ()=>{
+  document.getElementById('navLinks').classList.toggle('open');
+});
+document.querySelectorAll('#navLinks a').forEach(a=>{
+  a.addEventListener('click',()=>{
+    document.getElementById('navLinks').classList.remove('open');
+  });
+});
+
+// Intersection observer for fade-in
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, {threshold:.1});
+
+document.querySelectorAll('section:not(#hero)').forEach(el=>{
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(30px)';
+  el.style.transition = 'opacity .6s ease, transform .6s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
