@@ -302,14 +302,14 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     <h2 class="section-title">Who I am</h2>
     <div class="about-grid">
       <div class="about-text">
-        <p>What's good — I'm <strong>Shaun (MrKnuckls)</strong>, a PC gamer based in <strong>Dayton, Ohio</strong>. I spend my time deep in FiveM, DayZ, GTA, and Arc Raiders — and when I'm not playing, I'm hosting the servers we actually play on.</p>
+        <p>What's good — I'm <strong>Shaun (MrKnuckls)</strong>, a PC gamer based in <strong>Dayton, Ohio</strong>. I spend my time deep in Arma Reforger, StarRupture, PalWorld, DayZ, and Hytale — and when I'm not playing, I'm hosting the servers we actually play on.</p>
         <p>Everything runs out of my home lab, which is half battle-station, half science project. Proxmox, Docker, pfSense — the rack that keeps the servers online and the status feed green.</p>
         <p>I'm also building <strong>SanRoque</strong>, a co-op open-world game in Unreal Engine 5. It's early days, but the vision is clear: a living world where you and your squad write the story.</p>
         <p>This site is where you find my servers, what I'm into right now, and what's humming in the rack.</p>
       </div>
       <div class="about-stats">
-        <div class="stat-card"><div class="stat-num">4</div><div class="stat-label">Active Games</div></div>
-        <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">Hosted Servers</div></div>
+        <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Active Games</div></div>
+        <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Hosted Servers</div></div>
         <div class="stat-card"><div class="stat-num">1</div><div class="stat-label">UE5 Game in Dev</div></div>
         <div class="stat-card"><div class="stat-num">∞</div><div class="stat-label">Lab Uptime</div></div>
       </div>
@@ -322,13 +322,27 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
   <div class="container">
     <div class="section-label">/// games</div>
     <h2 class="section-title">What I'm playing now</h2>
-    <p class="section-sub">Four games own most of my time. Every one has a server I host or play on.</p>
+    <p class="section-sub">Five games own most of my time. Every one has a server I host or play on.</p>
     <div class="games-grid">
       <div class="game-card">
-        <div class="game-icon">🎮</div>
-        <h3>FiveM</h3>
-        <p>GTA V turned into a roleplay sandbox. No scripted missions — just you, a city, and a hundred other stories happening at once.</p>
-        <div class="game-tags"><span>Roleplay</span><span>Multiplayer</span></div>
+        <div class="game-icon">🪖</div>
+        <h3>Arma Reforger</h3>
+        <p>Cold War combined arms — large-scale infantry, armor, and heli ops. Modded scenarios and persistent PvP campaigns on the Knuckls server.</p>
+        <div class="game-tags"><span>MilSim</span><span>Combined Arms</span></div>
+        <a href="#servers" class="game-server-link">→ Server status</a>
+      </div>
+      <div class="game-card">
+        <div class="game-icon">🌟</div>
+        <h3>StarRupture</h3>
+        <p>Open-world extraction survival. Explore, build, fight AI and players in a hostile sci-fi frontier. Every run is a gamble.</p>
+        <div class="game-tags"><span>Extraction</span><span>Sci-Fi</span></div>
+        <a href="#servers" class="game-server-link">→ Server status</a>
+      </div>
+      <div class="game-card">
+        <div class="game-icon">😮</div>
+        <h3>PalWorld</h3>
+        <p>Build a base, catch Pals, automate production — then send your Pals into battle. It's survival crafting with creature collecting.</p>
+        <div class="game-tags"><span>Survival</span><span>Creature Collecting</span></div>
         <a href="#servers" class="game-server-link">→ Server status</a>
       </div>
       <div class="game-card">
@@ -339,17 +353,10 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <a href="#servers" class="game-server-link">→ Server status</a>
       </div>
       <div class="game-card">
-        <div class="game-icon">🏙️</div>
-        <h3>GTA</h3>
-        <p>Story mode heists by night, Online chaos by day. CEO crate runs, MC mischief, and the occasional Cayo Perico solo grind.</p>
-        <div class="game-tags"><span>Heist</span><span>Open World</span></div>
-        <a href="#servers" class="game-server-link">→ Server status</a>
-      </div>
-      <div class="game-card">
-        <div class="game-icon">⚡</div>
-        <h3>Arc Raiders</h3>
-        <p>PvPvE extraction shooter. Drop in, scavenge, fight AI and other players, extract with the loot — or lose it all. The tension is unreal.</p>
-        <div class="game-tags"><span>Extraction</span><span>PvPvE</span></div>
+        <div class="game-icon">🏔️</div>
+        <h3>Hytale</h3>
+        <p>Sandbox adventure with a deep modding engine. Procedural worlds, dungeons, and fully customizable game logic — building worlds, not just playing them.</p>
+        <div class="game-tags"><span>Sandbox</span><span>Modding</span></div>
         <a href="#servers" class="game-server-link">→ Server status</a>
       </div>
     </div>
@@ -361,24 +368,50 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
   <div class="container">
     <div class="section-label">/// servers</div>
     <h2 class="section-title">My servers</h2>
-    <p class="section-sub">These boxes live in my home lab. Jump on, bring your crew. Rules: don't cheat, don't be a wipe — instant ban, no appeals.</p>
+    <p class="section-sub">Five boxes live in my home lab. Jump on, bring your crew. Rules: don't cheat, don't be a wipe — instant ban, no appeals.</p>
     <div class="servers-grid" id="serversGrid">
-      <div class="server-card" data-server="fivem">
+      <div class="server-card" data-server="palworld">
         <div class="server-header">
-          <span class="server-name">Knuckls RP</span>
-          <span class="server-game">FiveM</span>
+          <span class="server-name">Knuckls Palworld</span>
+          <span class="server-game">PalWorld</span>
         </div>
         <div class="server-status">
           <span class="dot checking"></span>
           <span class="checking">CHECKING</span>
           <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
-        <div class="server-connect">connect knuckls.com:30120</div>
-        <div class="server-players">🔫 Serious RP | Whitelisted | Active staff</div>
+        <div class="server-connect">connect knuckls.com:8211</div>
+        <div class="server-players">😮 Casual/co-op | Max Pals enabled | Friendly base building</div>
+      </div>
+      <div class="server-card" data-server="starrupture">
+        <div class="server-header">
+          <span class="server-name">Knuckls_StarRupture</span>
+          <span class="server-game">StarRupture</span>
+        </div>
+        <div class="server-status">
+          <span class="dot checking"></span>
+          <span class="checking">CHECKING</span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
+        </div>
+        <div class="server-connect">connect knuckls.com:7777</div>
+        <div class="server-players">🌟 Extraction survival | PvPvE | Sci-fi frontier</div>
+      </div>
+      <div class="server-card" data-server="arma">
+        <div class="server-header">
+          <span class="server-name">Knuckls Arma Reforger Server</span>
+          <span class="server-game">Arma Reforger</span>
+        </div>
+        <div class="server-status">
+          <span class="dot checking"></span>
+          <span class="checking">CHECKING</span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
+        </div>
+        <div class="server-connect">connect knuckls.com:2001</div>
+        <div class="server-players">🪖 Combined arms | Modded scenarios | Persistent PvP</div>
       </div>
       <div class="server-card" data-server="dayz">
         <div class="server-header">
-          <span class="server-name">Survival Zone</span>
+          <span class="server-name">Knuckls DayZ Server</span>
           <span class="server-game">DayZ</span>
         </div>
         <div class="server-status">
@@ -387,20 +420,20 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
           <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
         <div class="server-connect">connect knuckls.com:2302</div>
-        <div class="server-players">🏚️ PvPvE | Modded loot | Party system</div>
+        <div class="server-players">🧟 ZOMBIES | PvPvE | Modded loot | Party system</div>
       </div>
-      <div class="server-card" data-server="arc">
+      <div class="server-card" data-server="hytale">
         <div class="server-header">
-          <span class="server-name">Knuckls Crew</span>
-          <span class="server-game">Arc Raiders</span>
+          <span class="server-name">knucklsHytale</span>
+          <span class="server-game">Hytale</span>
         </div>
         <div class="server-status">
           <span class="dot checking"></span>
           <span class="checking">CHECKING</span>
           <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
-        <div class="server-connect">Friend code: KNUCKLS-ARC</div>
-        <div class="server-players">🎯 Duo/squad focused | Learning the maps</div>
+        <div class="server-connect">connect knuckls.com:25565</div>
+        <div class="server-players">🏔️ Sandbox adventure | Modding | Procedural worlds</div>
       </div>
     </div>
   </div>
