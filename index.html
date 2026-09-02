@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* DARK THEME (default) */
 :root{
   --bg:#0d1117;
   --surface:#161b22;
@@ -25,10 +26,26 @@
   --font-head:'Rajdhani',sans-serif;
   --font-body:'Inter',sans-serif;
   --font-mono:'JetBrains Mono',monospace;
-  --nav-h:64px
+  --nav-h:64px;
+  --hero-grad:rgba(57,211,83,.06);
+}
+/* LIGHT THEME */
+html.light{
+  --bg:#f6f8fa;
+  --surface:#ffffff;
+  --surface-hover:#f0f2f5;
+  --text:#1f2328;
+  --text-muted:#656d76;
+  --accent:#2da44e;
+  --accent-glow:rgba(45,164,78,.2);
+  --secondary:#d29922;
+  --secondary-dim:rgba(210,153,34,.12);
+  --border:#d0d7de;
+  --red:#cf222e;
+  --hero-grad:rgba(45,164,78,.05);
 }
 html{scroll-behavior:smooth;overflow-x:hidden}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;transition:background .3s,color .3s}
 a{color:var(--accent);text-decoration:none;transition:color .2s}
 a:hover{color:#4be06a}
 img{max-width:100%;height:auto;display:block}
@@ -36,9 +53,11 @@ img{max-width:100%;height:auto;display:block}
 
 /* canvas background */
 #matrix-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.12}
+html.light #matrix-canvas{opacity:.06}
 
 /* nav */
-nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:rgba(13,17,23,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:0 24px}
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:rgba(13,17,23,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:0 24px;transition:background .3s,border-color .3s}
+html.light nav{background:rgba(255,255,255,.85)}
 nav .nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;width:100%}
 nav .logo{display:flex;align-items:center;gap:10px;font-family:var(--font-head);font-weight:700;font-size:1.4rem;color:var(--text)}
 nav .logo img{height:32px;width:auto}
@@ -47,11 +66,12 @@ nav .nav-links a{color:var(--text-muted);font-size:.9rem;font-weight:500;text-tr
 nav .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;background:var(--accent);transition:width .2s}
 nav .nav-links a:hover{color:var(--text)}
 nav .nav-links a:hover::after{width:100%}
-.nav-toggle{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.nav-toggle,.theme-toggle{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;color:var(--text-muted);font-size:1.1rem;line-height:1}
+.theme-toggle{display:flex;margin-left:12px}
 .nav-toggle span{display:block;width:24px;height:2px;background:var(--accent);transition:.3s}
 
 /* sections */
-section{position:relative;z-index:1;padding:100px 24px}
+section{position:relative;z-index:1;padding:100px 24px;transition:background .3s}
 section .container{max-width:1100px;margin:0 auto}
 .section-label{font-family:var(--font-mono);font-size:.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px}
 .section-title{font-family:var(--font-head);font-weight:700;font-size:clamp(1.8rem,4vw,2.8rem);color:var(--text);margin-bottom:16px}
@@ -59,7 +79,7 @@ section .container{max-width:1100px;margin:0 auto}
 
 /* hero */
 #hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding-top:var(--nav-h);position:relative;z-index:1;overflow:hidden}
-#hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,rgba(57,211,83,.06),transparent 70%);pointer-events:none}
+#hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 40%,var(--hero-grad),transparent 70%);pointer-events:none}
 .hero-content{position:relative}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--secondary-dim);border:1px solid rgba(255,176,0,.25);border-radius:100px;padding:6px 16px 6px 8px;font-size:.75rem;color:var(--secondary);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:32px}
 .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--secondary);animation:pulse-dot 2s ease-in-out infinite}
@@ -121,8 +141,10 @@ section .container{max-width:1100px;margin:0 auto}
 .server-status .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 .server-status .dot.online{background:var(--accent);box-shadow:0 0 8px var(--accent-glow);animation:pulse-dot 2s ease-in-out infinite}
 .server-status .dot.offline{background:var(--red)}
+.server-status .dot.checking{background:var(--secondary)}
 .server-status .online{color:var(--accent)}
 .server-status .offline{color:var(--red)}
+.server-status .checking{color:var(--secondary)}
 .server-connect{font-family:var(--font-mono);font-size:.82rem;color:var(--text-muted);background:rgba(13,17,23,.5);padding:8px 12px;border-radius:6px;border:1px solid var(--border);margin-bottom:10px;word-break:break-all}
 .server-players{font-size:.82rem;color:var(--text-muted);margin-bottom:14px}
 .server-rules{font-size:.8rem;color:var(--text-muted);padding-left:16px;margin-bottom:0}
@@ -143,30 +165,54 @@ section .container{max-width:1100px;margin:0 auto}
 .project-card-body .status-bar .bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
 .project-card-body .status-bar .bar-fill{height:100%;background:var(--accent);border-radius:2px;width:35%}
 
+/* blog */
+#blog{background:var(--surface)}
+.blog-list{display:flex;flex-direction:column;gap:20px}
+.blog-post{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;transition:all .2s}
+.blog-post:hover{border-color:var(--accent)}
+.blog-post .post-date{font-family:var(--font-mono);font-size:.72rem;color:var(--accent);margin-bottom:6px;letter-spacing:.04em}
+.blog-post h3{font-family:var(--font-head);font-weight:700;font-size:1.15rem;margin-bottom:8px;color:var(--text)}
+.blog-post p{color:var(--text-muted);font-size:.88rem;line-height:1.6;margin-bottom:8px}
+.blog-post .post-tags{display:flex;gap:6px;flex-wrap:wrap}
+.blog-post .post-tags span{font-family:var(--font-mono);font-size:.7rem;padding:2px 8px;border-radius:4px;background:rgba(57,211,53,.08);color:var(--accent);letter-spacing:.05em}
+.blog-empty{text-align:center;padding:40px;color:var(--text-muted);font-style:italic}
+
 /* lab */
-#lab{background:var(--surface)}
+#lab{background:var(--bg)}
 .lab-content{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
 .lab-desc p{color:var(--text-muted);font-size:.95rem;margin-bottom:16px}
 .lab-desc ul{list-style:none;padding:0}
 .lab-desc li{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.88rem;color:var(--text-muted);border-bottom:1px solid var(--border)}
 .lab-desc li:last-child{border-bottom:none}
 .lab-desc li .check{color:var(--accent);font-weight:700}
-.lab-image-wrap{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.lab-image-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
 .lab-image-wrap img{border-radius:8px;width:100%}
 .lab-image-wrap .caption{font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);margin-top:10px}
 
 /* connect */
-#connect{background:var(--bg);padding-bottom:80px}
-.connect-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:700px;margin:0 auto}
-.connect-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px}
+#connect{background:var(--surface);padding-bottom:80px}
+.connect-flex{display:flex;flex-wrap:wrap;gap:20px;max-width:900px;margin:0 auto;justify-content:center}
+.connect-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;min-width:180px}
 .connect-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 20px rgba(57,211,53,.08)}
 .connect-card .icon{font-size:2rem}
 .connect-card .label{font-family:var(--font-head);font-weight:600;font-size:1rem;color:var(--text)}
 .connect-card .handle{font-size:.8rem;color:var(--text-muted)}
 .connect-card .btn{width:100%;justify-content:center;margin-top:8px}
 
+/* discord widget */
+.discord-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;min-width:240px;flex:1}
+.discord-card .discord-header{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px}
+.discord-card .discord-header .dc-icon{font-size:1.6rem}
+.discord-card .discord-header .dc-name{font-family:var(--font-head);font-weight:700;font-size:1.1rem;color:var(--text)}
+.discord-card .discord-status{display:flex;justify-content:center;gap:24px;margin-bottom:16px}
+.discord-card .discord-status .dc-stat{text-align:center}
+.discord-card .discord-status .dc-stat .dc-num{font-family:var(--font-head);font-weight:700;font-size:1.4rem;color:var(--accent)}
+.discord-card .discord-status .dc-stat .dc-label{font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+.discord-card .btn-discord{background:#5865F2;color:#fff;width:100%}
+.discord-card .btn-discord:hover{background:#4752c4;transform:translateY(-2px);color:#fff}
+
 /* footer */
-footer{position:relative;z-index:1;background:var(--surface);border-top:1px solid var(--border);padding:40px 24px;text-align:center}
+footer{position:relative;z-index:1;background:var(--bg);border-top:1px solid var(--border);padding:40px 24px;text-align:center}
 footer .footer-inner{max-width:1100px;margin:0 auto}
 footer .footer-logo{margin:0 auto 16px;width:48px;opacity:.5}
 footer .footer-tagline{font-family:var(--font-head);font-size:1.1rem;color:var(--text-muted);margin-bottom:16px}
@@ -177,7 +223,8 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 
 /* responsive */
 @media(max-width:768px){
-  nav .nav-links{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,17,23,.98);flex-direction:column;padding:24px;gap:16px;border-bottom:1px solid var(--border)}
+  nav .nav-links{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,17,23,.98);flex-direction:column;padding:24px;gap:16px;border-bottom:1px solid var(--border);z-index:99}
+  html.light nav .nav-links{background:rgba(255,255,255,.98)}
   nav .nav-links.open{display:flex}
   .nav-toggle{display:flex}
   .about-grid,.lab-content{grid-template-columns:1fr}
@@ -190,7 +237,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
   .btn{width:100%;justify-content:center}
   .games-grid,.servers-grid{grid-template-columns:1fr}
   .projects-grid{grid-template-columns:1fr}
-  .connect-grid{grid-template-columns:1fr 1fr}
+  .connect-flex{flex-direction:column}
 }
 </style>
 </head>
@@ -213,8 +260,10 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <li><a href="#games">Games</a></li>
       <li><a href="#servers">Servers</a></li>
       <li><a href="#projects">Projects</a></li>
+      <li><a href="#blog">Dev Blog</a></li>
       <li><a href="#lab">Lab</a></li>
       <li><a href="#connect">Connect</a></li>
+      <li><button class="theme-toggle" id="themeToggle" title="Toggle theme">☀️</button></li>
     </ul>
   </div>
 </nav>
@@ -292,7 +341,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <div class="game-card">
         <div class="game-icon">🏙️</div>
         <h3>GTA</h3>
-        <p>Story mode heists by day, Online chaos by night. CEO crate runs, MC mischief, and the occasional Cayo Perico solo grind.</p>
+        <p>Story mode heists by night, Online chaos by day. CEO crate runs, MC mischief, and the occasional Cayo Perico solo grind.</p>
         <div class="game-tags"><span>Heist</span><span>Open World</span></div>
         <a href="#servers" class="game-server-link">→ Server status</a>
       </div>
@@ -313,42 +362,42 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     <div class="section-label">/// servers</div>
     <h2 class="section-title">My servers</h2>
     <p class="section-sub">These boxes live in my home lab. Jump on, bring your crew. Rules: don't cheat, don't be a wipe — instant ban, no appeals.</p>
-    <div class="servers-grid">
-      <div class="server-card">
+    <div class="servers-grid" id="serversGrid">
+      <div class="server-card" data-server="fivem">
         <div class="server-header">
           <span class="server-name">Knuckls RP</span>
           <span class="server-game">FiveM</span>
         </div>
         <div class="server-status">
-          <span class="dot online"></span>
-          <span class="online">ONLINE</span>
-          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)">42/64 players</span>
+          <span class="dot checking"></span>
+          <span class="checking">CHECKING</span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
         <div class="server-connect">connect knuckls.com:30120</div>
         <div class="server-players">🔫 Serious RP | Whitelisted | Active staff</div>
       </div>
-      <div class="server-card">
+      <div class="server-card" data-server="dayz">
         <div class="server-header">
           <span class="server-name">Survival Zone</span>
           <span class="server-game">DayZ</span>
         </div>
         <div class="server-status">
-          <span class="dot online"></span>
-          <span class="online">ONLINE</span>
-          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)">18/60 players</span>
+          <span class="dot checking"></span>
+          <span class="checking">CHECKING</span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
         <div class="server-connect">connect knuckls.com:2302</div>
         <div class="server-players">🏚️ PvPvE | Modded loot | Party system</div>
       </div>
-      <div class="server-card">
+      <div class="server-card" data-server="arc">
         <div class="server-header">
           <span class="server-name">Knuckls Crew</span>
           <span class="server-game">Arc Raiders</span>
         </div>
         <div class="server-status">
-          <span class="dot online"></span>
-          <span class="online">RECRUITING</span>
-          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)">6 in crew</span>
+          <span class="dot checking"></span>
+          <span class="checking">CHECKING</span>
+          <span style="margin-left:auto;font-size:.8rem;color:var(--text-muted)" class="player-count">—</span>
         </div>
         <div class="server-connect">Friend code: KNUCKLS-ARC</div>
         <div class="server-players">🎯 Duo/squad focused | Learning the maps</div>
@@ -409,6 +458,33 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
           </div>
         </div>
       </div>
+      <div class="project-card">
+        <div class="project-card-img">
+          <div class="placeholder-icon">💻</div>
+        </div>
+        <div class="project-card-body">
+          <span class="tag">In Development</span>
+          <h3>Knuckls OS</h3>
+          <p>A custom operating system built from scratch — my own architecture, kernel, and vision for what an OS should be. Bare metal, no shortcuts.</p>
+          <div class="status-bar">
+            <span>Early Design</span>
+            <div class="bar"><div class="bar-fill" style="width:10%"></div></div>
+            <span>10%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BLOG -->
+<section id="blog">
+  <div class="container">
+    <div class="section-label">/// dev blog</div>
+    <h2 class="section-title">SanRoque dev log</h2>
+    <p class="section-sub">Build updates, dev notes, and screenshots from the SanRoque project. New entries appear as I push progress.</p>
+    <div class="blog-list" id="blogList">
+      <div class="blog-empty">Loading latest dev notes...</div>
     </div>
   </div>
 </section>
@@ -430,7 +506,6 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
           <li><span class="check">✓</span> Game servers — FiveM, DayZ, more</li>
           <li><span class="check">✓</span> UPS backup — 30 min runtime on outage</li>
         </ul>
-        <p style="margin-top:16px;font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted)">Uptime tracking &amp; live status coming soon to status.knuckls.com</p>
       </div>
       <div class="lab-image-wrap">
         <a href="assets/img/knuckls-lab-network.png" target="_blank">
@@ -448,12 +523,23 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     <div class="section-label">/// connect</div>
     <h2 class="section-title">Wanna play or just say hi?</h2>
     <p class="section-sub" style="margin:0 auto 40px">Catch me on Discord, add me on Steam, or shoot an email.</p>
-    <div class="connect-grid">
-      <div class="connect-card">
-        <div class="icon">💬</div>
-        <div class="label">Discord</div>
-        <div class="handle">@MrKnuckls</div>
-        <a href="#" class="btn btn-primary" style="font-size:.8rem;padding:8px 16px">Join Server</a>
+    <div class="connect-flex">
+      <div class="discord-card" id="discordCard">
+        <div class="discord-header">
+          <span class="dc-icon">💬</span>
+          <span class="dc-name">Discord</span>
+        </div>
+        <div class="discord-status">
+          <div class="dc-stat">
+            <div class="dc-num" id="dcMembers">—</div>
+            <div class="dc-label">Members</div>
+          </div>
+          <div class="dc-stat">
+            <div class="dc-num" id="dcOnline">—</div>
+            <div class="dc-label">Online</div>
+          </div>
+        </div>
+        <a href="#" class="btn btn-discord" id="discordJoinBtn">Join the server</a>
       </div>
       <div class="connect-card">
         <div class="icon">🎮</div>
@@ -488,6 +574,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <a href="#games">Games</a>
       <a href="#servers">Servers</a>
       <a href="#projects">Projects</a>
+      <a href="#blog">Dev Blog</a>
       <a href="#lab">Lab</a>
       <a href="#connect">Connect</a>
     </div>
@@ -496,6 +583,26 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 </footer>
 
 <script>
+// Theme toggle
+(function(){
+  const html = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('knuckls-theme');
+  if(saved === 'light') html.classList.add('light');
+  
+  function updateIcon(){
+    if(!btn) return;
+    btn.textContent = html.classList.contains('light') ? '🌙' : '☀️';
+  }
+  updateIcon();
+  
+  btn?.addEventListener('click', ()=>{
+    html.classList.toggle('light');
+    localStorage.setItem('knuckls-theme', html.classList.contains('light') ? 'light' : 'dark');
+    updateIcon();
+  });
+})();
+
 // Matrix rain background
 (function(){
   const c = document.getElementById('matrix-canvas');
@@ -554,6 +661,102 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     }
   }
   step();
+})();
+
+// Live server status via PHP ping
+(async function(){
+  const config = [
+    { id:'fivem', host:'127.0.0.1', port:30120, label:'Knuckls RP', game:'FiveM', desc:'🔫 Serious RP | Whitelisted | Active staff', connect:'connect knuckls.com:30120' },
+    { id:'dayz', host:'127.0.0.1', port:2302, label:'Survival Zone', game:'DayZ', desc:'🏚️ PvPvE | Modded loot | Party system', connect:'connect knuckls.com:2302' },
+    { id:'arc', host:'127.0.0.1', port:27015, label:'Knuckls Crew', game:'Arc Raiders', desc:'🎯 Duo/squad focused | Learning the maps', connect:'Friend code: KNUCKLS-ARC' }
+  ];
+
+  function updateCard(id, status, players, maxPlayers){
+    const card = document.querySelector(`[data-server="${id}"]`);
+    if(!card) return;
+    const dot = card.querySelector('.dot');
+    const label = card.querySelector('.server-status > span:nth-child(2)');
+    const pc = card.querySelector('.player-count');
+    
+    if(status === 'online'){
+      dot.className = 'dot online';
+      label.className = 'online';
+      label.textContent = 'ONLINE';
+      pc.textContent = players ? `${players}/${maxPlayers || '?'} players` : '—';
+    } else if(status === 'offline'){
+      dot.className = 'dot offline';
+      label.className = 'offline';
+      label.textContent = 'OFFLINE';
+      pc.textContent = '—';
+    } else {
+      dot.className = 'dot checking';
+      label.className = 'checking';
+      label.textContent = 'CHECKING';
+      pc.textContent = '—';
+    }
+  }
+
+  async function checkAll(){
+    for(const srv of config){
+      updateCard(srv.id, 'checking');
+      try{
+        // Try PHP ping script
+        const resp = await fetch(`/ping.php?host=${srv.host}&port=${srv.port}`, {signal:AbortSignal.timeout(5000)});
+        const data = await resp.json();
+        updateCard(srv.id, data.online ? 'online' : 'offline', data.players, data.max_players);
+      } catch(e){
+        updateCard(srv.id, 'offline');
+      }
+    }
+  }
+
+  checkAll();
+  setInterval(checkAll, 60000);
+})();
+
+// Discord widget
+(function(){
+  const guildId = localStorage.getItem('knuckls-discord-id');
+  async function fetchWidget(){
+    if(!guildId) return;
+    try{
+      const resp = await fetch(`https://discord.com/api/guilds/${guildId}/widget.json`);
+      const data = await resp.json();
+      document.getElementById('dcMembers').textContent = data.members?.toLocaleString() || '—';
+      document.getElementById('dcOnline').textContent = data.presence_count?.toLocaleString() || '—';
+      if(data.instant_invite){
+        document.getElementById('discordJoinBtn').href = data.instant_invite;
+      }
+    } catch(e){}
+  }
+  
+  // If guild ID is saved, fetch; otherwise show placeholder
+  if(guildId){
+    fetchWidget();
+  }
+})();
+
+// Dev blog - load from JSON feed
+(async function(){
+  const list = document.getElementById('blogList');
+  try{
+    const resp = await fetch('/blog.json');
+    const posts = await resp.json();
+    if(!posts || posts.length === 0){
+      list.innerHTML = '<div class="blog-empty">No dev notes yet. First update coming soon.</div>';
+      return;
+    }
+    list.innerHTML = posts.map(p => `
+      <div class="blog-post">
+        <div class="post-date">${p.date || ''}</div>
+        <h3>${p.title || 'Untitled'}</h3>
+        <p>${p.body || ''}</p>
+        ${p.tags ? `<div class="post-tags">${p.tags.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
+      </div>
+    `).join('');
+  } catch(e){
+    list.innerHTML = '<div class="blog-empty">Could not load dev notes.</div>';
+  }
 })();
 
 // Mobile nav toggle

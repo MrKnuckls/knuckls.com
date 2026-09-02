@@ -1,0 +1,26 @@
+[
+  {
+    "date": "Sep 2, 2026",
+    "title": "Knuckls OS announced",
+    "body": "Starting a new project — a custom OS built from the ground up. Custom kernel, custom bootloader, my own architecture. This is going to take a long time but the vision is clear: an OS that does exactly what I want, nothing I don't. First milestone: get a bare-metal boot screen with my logo displayed.",
+    "tags": ["os", "kernel", "new"]
+  },
+  {
+    "date": "Aug 28, 2026",
+    "title": "Build 0.3 — terrain system working",
+    "body": "Spent the week on instanced terrain trees in SanRoque. Root cause was the MeshRenderer needing to live on the prefab root, not child objects. Fix was merging all parts into one mesh on the root. Trees now render properly across the whole map. Next up: crafting UI.",
+    "tags": ["sanroque", "ue5", "fix"]
+  },
+  {
+    "date": "Aug 20, 2026",
+    "title": "Inventory system overhaul",
+    "body": "Ripped out the old inventory framework and built a custom Jinxish Drag&Drop system. 6x6 grid with hotbar at the bottom, dark slate panel with gold borders. Had a CS0118 namespace collision with the old framework's Inventory class — deleted the conflicting one and it compiled clean.",
+    "tags": ["sanroque", "ue5", "ui"]
+  },
+  {
+    "date": "Aug 15, 2026",
+    "title": "knuckls.com launched",
+    "body": "New static site is live. No more WordPress — just raw HTML with matrix rain, Terminal branding, and server status. Wordpress is gone, the rack is humming, and the squad has a proper hub now.",
+    "tags": ["site", "deploy", "infra"]
+  }
+]
