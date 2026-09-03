@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>KNUCKLS — Gamer. Server host. Lab rat.</title>
 <meta name="description" content="Shaun (MrKnuckls) — games, servers, home lab, projects.">
 <link rel="icon" href="assets/img/knuckls-fist-badge.png">
@@ -600,8 +603,9 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:24px">This dashboard is for server admins only.</p>
       <div style="display:flex;gap:8px;justify-content:center">
         <input type="password" id="consolePass" placeholder="Passkey" 
-          style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--font-mono);font-size:.9rem;width:200px;outline:none">
-        <button class="btn btn-primary" id="consoleUnlock" style="padding:10px 20px;font-size:.85rem">Unlock</button>
+                  onkeydown="if(event.key==='Enter') doConsoleUnlock()"
+                  style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--font-mono);font-size:.9rem;width:200px;outline:none">
+        <button class="btn btn-primary" id="consoleUnlock" onclick="doConsoleUnlock()" style="padding:10px 20px;font-size:.85rem">Unlock</button>
       </div>
       <p id="consoleFail" style="color:var(--red);font-size:.8rem;margin-top:12px;display:none">Wrong passkey</p>
     </div>
@@ -1077,38 +1081,53 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
 });
 
 // ─── COMMAND CENTER ───────────────────────────────
+// Global auth function — called by inline onclick/onkeydown
+window.doConsoleUnlock = async function(){
+  var inp = document.getElementById('consolePass');
+  var gate = document.getElementById('consoleGate');
+  var dash = document.getElementById('consoleDash');
+  var fail = document.getElementById('consoleFail');
+  var pass = inp ? inp.value.trim() : '';
+  if(!pass) return;
+  try {
+    var r = await fetch('/console.php?action=auth&pass=' + encodeURIComponent(pass) + '&v=' + Date.now());
+    var d = await r.json();
+    if(d && d.authed){
+      if(gate) gate.style.display = 'none';
+      if(dash) dash.style.display = 'block';
+      sessionStorage.setItem('knuckls_auth', '1');
+      window.dispatchEvent(new Event('console-authed'));
+    } else {
+      if(fail){ fail.style.display = 'block'; fail.textContent = 'Wrong passkey'; }
+    }
+  } catch(e){
+    if(fail){ fail.style.display = 'block'; fail.textContent = 'Connection error'; }
+  }
+}
+
 (function(){
   var g = function(id){ return document.getElementById(id); };
-  var gate = g('consoleGate'), dash = g('consoleDash'), inp = g('consolePass'), btn = g('consoleUnlock'), fail = g('consoleFail');
+  var gate = g('consoleGate'), dash = g('consoleDash'), inp = g('consolePass'), fail = g('consoleFail');
   var authed = false;
-  var timer = null;
-  var ws = null;
-
-  async function tryUnlock(){
-    var pass = inp ? inp.value.trim() : '';
-    if(!pass) return;
-    try {
-      var r = await fetch('/console.php?action=auth&pass=' + encodeURIComponent(pass));
-      var d = await r.json();
-      if(d && d.authed){
-        authed = true;
-        if(gate) gate.style.display = 'none';
-        if(dash) dash.style.display = 'block';
-        fetchStatus();
-        timer = setInterval(fetchStatus, 15000);
-      } else {
-        if(fail){ fail.style.display = 'block'; fail.textContent = 'Wrong passkey'; }
-      }
-    } catch(e){
-      if(fail){ fail.style.display = 'block'; fail.textContent = 'Connection error'; }
+    // Auto-auth if already logged in
+    if(sessionStorage.getItem('knuckls_auth')){
+      if(g('consoleGate')) g('consoleGate').style.display = 'none';
+      if(g('consoleDash')) g('consoleDash').style.display = 'block';
+      window.dispatchEvent(new Event('console-authed'));
     }
-  }
+      var timer = null;
+    var ws = null;
 
-  if(btn) btn.addEventListener('click', tryUnlock);
-  if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') tryUnlock(); });
-
-  // ─── Dashboard functions ───
-  var PASS = 'knuckls2026';
+    // ─── Dashboard functions ───
+      var PASS = 'knuckls2026';
+  
+      // Listen for global auth event
+      window.addEventListener('console-authed', function(){
+        authed = true;
+        fetchStatus();
+        if(typeof timer !== 'undefined' && timer) clearInterval(timer);
+        timer = setInterval(fetchStatus, 15000);
+      });
   var serverIds = ['palworld','starrupture','arma','dayz','hytale'];
   var consoleGrid = g('consoleGrid');
   var statusEl = g('consoleStatus');
