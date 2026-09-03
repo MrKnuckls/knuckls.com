@@ -363,7 +363,7 @@ window.knucklsV8730 = async function(){
 
   window.sendCmd = function(id, action){
     if(!authed) return;
-    fetch('/console.php?action=cmd&pass=' + encodeURIComponent(PASS) + '&server=' + id + '&cmd=' + action, {signal:AbortSignal.timeout(10000)})
+    fetch('/console.php?action=power&pass=' + encodeURIComponent(PASS) + '&server=' + id + '&signal=' + action, {signal:AbortSignal.timeout(10000)})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(toast){ toast.textContent = d.ok ? '✓ ' + action + ' sent to ' + id : '✗ ' + (d.msg||'failed'); toast.style.display = 'block'; setTimeout(function(){ toast.style.display = 'none'; }, 4000); }

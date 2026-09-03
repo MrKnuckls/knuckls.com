@@ -1,96 +1,71 @@
 <?php
 /**
- * Upload endpoint for Quick File Uploader
- * Password-gated. Receives files, stores in assets/files/, updates assets.json
- * 
- * Usage:
- *   POST /upload.php
- *     pass=<password>
- *     file=<uploaded file>
- *     title=<display name> (optional, defaults to filename)
- *     desc=<description> (optional)
- * 
- * Returns JSON: { ok: true/false, msg: "...", id: "..." }
+ * File Upload — password-protected file upload to server
+ * POST: multipart form with 'file' and 'pass'
  */
-
-error_reporting(0);
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
+header('Cache-Control: no-cache, no-store, must-revalidate');
 
 $PASS = 'knuckls2026';
-$ASSETS_FILE = __DIR__ . '/assets.json';
-$FILES_DIR = __DIR__ . '/assets/files';
 
-// Auth
-$pass = $_POST['pass'] ?? $_GET['pass'] ?? '';
-if ($pass !== $PASS) {
-    echo json_encode(['ok' => false, 'msg' => 'Invalid passkey']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['ok' => false, 'msg' => 'POST required']);
     exit;
 }
 
-// Handle file upload
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['file'])) {
-    echo json_encode(['ok' => false, 'msg' => 'No file sent']);
+$pass = $_POST['pass'] ?? '';
+if ($pass !== $PASS) {
+    echo json_encode(['ok' => false, 'msg' => 'unauthorized']);
+    exit;
+}
+
+if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+    $errMsg = 'Upload error';
+    if (isset($_FILES['file'])) {
+        switch ($_FILES['file']['error']) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                $errMsg = 'File too large (max 2GB)';
+                break;
+            case UPLOAD_ERR_PARTIAL:
+                $errMsg = 'Partial upload — try again';
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                $errMsg = 'No file selected';
+                break;
+        }
+    }
+    echo json_encode(['ok' => false, 'msg' => $errMsg]);
     exit;
 }
 
 $file = $_FILES['file'];
+$origName = basename($file['name']);
+$targetDir = __DIR__ . '/uploads';
+if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
 
-if ($file['error'] !== UPLOAD_ERR_OK) {
-    echo json_encode(['ok' => false, 'msg' => 'Upload error code: ' . $file['error']]);
-    exit;
-}
-
-// PHP config is the real cap — no artificial limit here
-
-// Create dirs
-if (!is_dir($FILES_DIR)) {
-    mkdir($FILES_DIR, 0755, true);
-}
-
-// Generate safe filename
-$origName = $file['name'];
+// Sanitize filename — keep extension, remove dangerous chars
 $ext = pathinfo($origName, PATHINFO_EXTENSION);
-$safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', pathinfo($origName, PATHINFO_FILENAME));
-if (!$safeName) $safeName = 'asset';
-$fileName = $safeName . '-' . time() . '.' . $ext;
-$destPath = $FILES_DIR . '/' . $fileName;
+$safeName = preg_replace('/[^a-zA-Z0-9_\-.]+/', '_', pathinfo($origName, PATHINFO_FILENAME));
+$safeName = substr($safeName, 0, 80) . ($ext ? '.' . $ext : '');
+$targetPath = $targetDir . '/' . $safeName;
 
-if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+// Avoid overwrite — append number if exists
+$counter = 1;
+$finalPath = $targetPath;
+while (file_exists($finalPath)) {
+    $finalPath = $targetDir . '/' . pathinfo($safeName, PATHINFO_FILENAME) . "_$counter." . $ext;
+    $counter++;
+}
+
+if (move_uploaded_file($file['tmp_name'], $finalPath)) {
+    echo json_encode([
+        'ok' => true,
+        'name' => basename($finalPath),
+        'size' => filesize($finalPath),
+        'url'  => '/uploads/' . basename($finalPath),
+    ]);
+} else {
     echo json_encode(['ok' => false, 'msg' => 'Failed to save file']);
-    exit;
 }
-
-// Build asset ID
-$assetId = strtolower(preg_replace('/[^a-zA-Z0-9]/', '-', $safeName)) . '-' . time();
-$title = $_POST['title'] ?: pathinfo($origName, PATHINFO_FILENAME);
-$desc = $_POST['desc'] ?: '';
-$sizeMb = round($file['size'] / 1024 / 1024, 1) . ' MB';
-
-$newAsset = [
-    'id'    => $assetId,
-    'title' => $title,
-    'desc'  => $desc,
-    'type'  => strtolower($ext),
-    'size'  => $sizeMb,
-    'file'  => 'assets/files/' . $fileName,
-    'date'  => date('Y-m-d'),
-];
-
-// Read existing assets.json
-$existing = [];
-if (file_exists($ASSETS_FILE)) {
-    $content = file_get_contents($ASSETS_FILE);
-    $existing = json_decode($content, true) ?: [];
-}
-$existing[] = $newAsset;
-
-file_put_contents($ASSETS_FILE, json_encode($existing, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-echo json_encode([
-    'ok'   => true,
-    'msg'  => 'Uploaded successfully',
-    'id'   => $assetId,
-    'file' => $newAsset['file'],
-    'size' => $sizeMb,
-]);

@@ -1,105 +1,78 @@
 <?php
 /**
- * Uptime Timeline API
- * Reads the uptime log written by console.php and returns aggregated status.
- * 
- * Usage:
- *   /uptime.php?range=24h&server=palworld
- *   /uptime.php?range=7d&server=all
- * 
- * Returns: { server: [{ from, to, online }...] }
+ * Uptime Timeline — reads uptime_log.json and returns server-state slots
+ * Range: ?range=24h | 7d | 30d
  */
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Cache-Control: max-age=60');
+header('Cache-Control: no-cache, no-store, must-revalidate');
 
+$range = $_GET['range'] ?? '24h';
 $logFile = __DIR__ . '/uptime_log.json';
 
 if (!file_exists($logFile)) {
-    echo json_encode(['error' => 'No uptime data yet']);
+    echo json_encode(['slots' => [], 'servers' => ['palworld','starrupture','arma','dayz','hytale']]);
     exit;
 }
 
-$lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 $entries = [];
+$lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 foreach ($lines as $line) {
-    $d = json_decode($line, true);
-    if ($d && isset($d['ts'], $d['servers'])) $entries[] = $d;
+    $e = json_decode($line, true);
+    if ($e && isset($e['ts'])) $entries[] = $e;
+}
+if (!$entries) {
+    echo json_encode(['slots' => [], 'servers' => ['palworld','starrupture','arma','dayz','hytale']]);
+    exit;
 }
 
-$range = $_GET['range'] ?? '24h';
-$targetServer = $_GET['server'] ?? 'all';
+// Determine time window
 $now = time();
-
-// Time window
 switch ($range) {
-    case '7d':  $window = 7 * 86400; break;
-    case '30d': $window = 30 * 86400; break;
-    case '24h':
-    default:    $window = 86400; break;
+    case '7d':  $cutoff = $now - 604800; break;
+    case '30d': $cutoff = $now - 2592000; break;
+    default:    $cutoff = $now - 86400;  break; // 24h
 }
 
-// Bar count (resolve to ~1 bar per Nth minutes)
-$barCount = $range === '24h' ? 24 : ($range === '7d' ? 28 : 30);
-$barDuration = $window / $barCount;
-
-// Filter entries within window
-$cutoff = $now - $window;
 $filtered = array_filter($entries, fn($e) => $e['ts'] >= $cutoff);
 $filtered = array_values($filtered);
 
-// If no data, return empty
-if (empty($filtered)) {
-    echo json_encode(['range' => $range, 'servers' => []]);
-    exit;
-}
+// Sort oldest first
+usort($filtered, fn($a,$b) => $a['ts'] - $b['ts']);
 
-// Build timeline bars
-$servers = [];
-$lastState = [];
-foreach ($filtered as $e) {
-    foreach ($e['servers'] as $sid => $info) {
-        // Support both old format (bool) and new format ({online, cpu, ram})
-        $online = is_bool($info) ? $info : ($info['online'] ?? false);
-        if ($targetServer !== 'all' && $sid !== $targetServer) continue;
-        if (!isset($servers[$sid])) $servers[$sid] = [];
-        if (!isset($lastState[$sid])) {
-            $lastState[$sid] = $online;
-            continue;
-        }
-        $servers[$sid][] = ['ts' => $e['ts'], 'online' => $online];
+// Determine slot interval
+$totalSecs = $now - $cutoff;
+$numSlots = $totalSecs <= 86400 ? 24 : ($totalSecs <= 604800 ? 42 : 30);
+$slotSecs = max(1, intdiv($totalSecs, $numSlots));
+
+$servers = ['palworld','starrupture','arma','dayz','hytale'];
+
+// Build slots
+$slots = [];
+$slotIndex = 0;
+$baseTime = $cutoff;
+
+for ($s = 0; $s < $numSlots; $s++) {
+    $slotStart = $baseTime + $s * $slotSecs;
+    $slotEnd = $baseTime + ($s + 1) * $slotSecs;
+    
+    // Find all entries in this slot
+    $inSlot = array_filter($filtered, fn($e) => $e['ts'] >= $slotStart && $e['ts'] < $slotEnd);
+    
+    // Format label
+    $label = date('H:i', $slotStart);
+    if ($range === '7d') $label = date('D H:i', $slotStart);
+    elseif ($range === '30d') $label = date('M j', $slotStart);
+    
+    $slot = ['_label' => $label];
+    foreach ($servers as $srv) {
+        $statuses = array_map(fn($e) => $e['servers'][$srv]['online'] ?? null, $inSlot);
+        $statuses = array_filter($statuses, fn($v) => $v !== null);
+        $slot[$srv] = count($statuses) > 0
+            ? (array_sum($statuses) / count($statuses) > 0.5)  // majority vote
+            : null;
     }
+    $slots[] = $slot;
 }
 
-// Aggregate into bars
-$result = [];
-foreach ($servers as $sid => $points) {
-    $bars = [];
-    for ($i = 0; $i < $barCount; $i++) {
-        $barStart = $now - $window + ($i * $barDuration);
-        $barEnd = $barStart + $barDuration;
-        // Check if any point in this window was online
-        $onlineInBar = false;
-        $hasData = false;
-        foreach ($points as $p) {
-            if ($p['ts'] >= $barStart && $p['ts'] < $barEnd) {
-                $hasData = true;
-                if ($p['online']) { $onlineInBar = true; break; }
-            }
-        }
-        $bars[] = [
-            'from' => (int)$barStart,
-            'to'   => (int)$barEnd,
-            'online' => $hasData ? $onlineInBar : null, // null = no data
-        ];
-    }
-    $result[$sid] = $bars;
-}
-
-echo json_encode([
-    'range' => $range,
-    'window' => $window,
-    'barCount' => $barCount,
-    'now' => $now,
-    'servers' => $result,
-]);
+echo json_encode(['slots' => $slots, 'servers' => $servers]);

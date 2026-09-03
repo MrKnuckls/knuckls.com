@@ -1,78 +1,57 @@
 <?php
 /**
- * Resource History API
- * Returns CPU/RAM data points from uptime log.
- * 
- * Usage: /resources.php?server=palworld&range=24h
- * Returns: { server: string, range: string, points: [{ ts, cpu, ram, online }] }
+ * Resource History — reads uptime_log.json and returns chart data
+ * ?server=palworld&range=24h
  */
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Cache-Control: max-age=60');
+header('Cache-Control: no-cache, no-store, must-revalidate');
 
+$server = $_GET['server'] ?? 'palworld';
+$range  = $_GET['range'] ?? '24h';
 $logFile = __DIR__ . '/uptime_log.json';
 
-if (!file_exists($logFile)) {
-    echo json_encode(['error' => 'No data yet']);
+$valid = ['palworld','starrupture','arma','dayz','hytale'];
+if (!in_array($server, $valid)) {
+    echo json_encode(['points' => [], 'error' => 'invalid server']);
     exit;
 }
 
-$lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 $entries = [];
-foreach ($lines as $line) {
-    $d = json_decode($line, true);
-    if ($d && isset($d['ts'], $d['servers'])) $entries[] = $d;
+if (file_exists($logFile)) {
+    $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $e = json_decode($line, true);
+        if ($e && isset($e['ts'])) $entries[] = $e;
+    }
 }
 
-$server = $_GET['server'] ?? 'palworld';
-$range = $_GET['range'] ?? '24h';
 $now = time();
-
 switch ($range) {
-    case '7d':  $window = 7 * 86400; break;
-    case '30d': $window = 30 * 86400; break;
-    default:    $window = 86400;
+    case '7d':  $cutoff = $now - 604800; break;
+    case '30d': $cutoff = $now - 2592000; break;
+    default:    $cutoff = $now - 86400;  break;
 }
 
-$cutoff = $now - $window;
-$filtered = array_filter($entries, fn($e) => $e['ts'] >= $cutoff);
-$filtered = array_values($filtered);
+$filtered = array_values(array_filter($entries, fn($e) => $e['ts'] >= $cutoff));
+usort($filtered, fn($a,$b) => $a['ts'] - $b['ts']);
 
-$points = [];
-foreach ($filtered as $e) {
-    if (!isset($e['servers'][$server])) continue;
-    $info = $e['servers'][$server];
-    // Old format (bool) has no resource data
-    if (is_bool($info)) continue;
-    $points[] = [
-        'ts'     => $e['ts'],
-        'cpu'    => round($info['cpu'] ?? 0, 1),
-        'ram'    => round(($info['ram'] ?? 0) / 1048576, 1), // bytes to MB
-        'online' => $info['online'] ?? false,
+// Sample down — max ~120 points for display
+$maxPoints = 120;
+$step = count($filtered) > $maxPoints ? intdiv(count($filtered), $maxPoints) : 1;
+$sampled = [];
+for ($i = 0; $i < count($filtered); $i += $step) {
+    $e = $filtered[$i];
+    $sr = $e['servers'][$server] ?? null;
+    if ($sr === null) continue;
+    $label = date('H:i', $e['ts']);
+    if ($range === '7d') $label = date('D H:i', $e['ts']);
+    elseif ($range === '30d') $label = date('M j', $e['ts']);
+    $sampled[] = [
+        't'   => $label,
+        'cpu' => round($sr['cpu'] ?? 0, 1),
+        'ram' => round(($sr['ram'] ?? 0) / 1048576, 1),  // bytes → MB
     ];
 }
 
-// Aggregate into ~N time buckets for chart
-$maxPoints = 60;
-$aggrPoints = [];
-if (count($points) > $maxPoints) {
-    $bucketSize = ceil(count($points) / $maxPoints);
-    for ($i = 0; $i < count($points); $i += $bucketSize) {
-        $bucket = array_slice($points, $i, $bucketSize);
-        $aggrPoints[] = [
-            'ts'     => end($bucket)['ts'],
-            'cpu'    => round(array_sum(array_column($bucket, 'cpu')) / count($bucket), 1),
-            'ram'    => round(array_sum(array_column($bucket, 'ram')) / count($bucket), 1),
-            'online' => end($bucket)['online'],
-        ];
-    }
-} else {
-    $aggrPoints = $points;
-}
-
-echo json_encode([
-    'server' => $server,
-    'range'  => $range,
-    'count'  => count($aggrPoints),
-    'points' => $aggrPoints,
-]);
+echo json_encode(['points' => $sampled]);
