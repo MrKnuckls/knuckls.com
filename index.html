@@ -170,9 +170,13 @@ section .container{max-width:1100px;margin:0 auto}
 .blog-list{display:flex;flex-direction:column;gap:20px}
 .blog-post{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;transition:all .2s}
 .blog-post:hover{border-color:var(--accent)}
-.blog-post .post-date{font-family:var(--font-mono);font-size:.72rem;color:var(--accent);margin-bottom:6px;letter-spacing:.04em}
+.blog-post .post-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.blog-post .post-date{font-family:var(--font-mono);font-size:.72rem;color:var(--accent);letter-spacing:.04em}
+.blog-post .post-cat{font-family:var(--font-mono);font-size:.65rem;padding:2px 8px;border-radius:4px;background:rgba(57,211,53,.1);color:var(--accent);text-transform:uppercase}
+.blog-post .post-version{font-family:var(--font-mono);font-size:.65rem;padding:2px 8px;border-radius:4px;background:rgba(255,176,0,.1);color:var(--secondary)}
 .blog-post h3{font-family:var(--font-head);font-weight:700;font-size:1.15rem;margin-bottom:8px;color:var(--text)}
-.blog-post p{color:var(--text-muted);font-size:.88rem;line-height:1.6;margin-bottom:8px}
+.blog-post .post-content{color:var(--text-muted);font-size:.88rem;line-height:1.6;margin-bottom:8px;white-space:pre-wrap}
+.blog-post .post-image{margin-bottom:12px;border-radius:8px;width:100%;max-height:300px;object-fit:cover;border:1px solid var(--border)}
 .blog-post .post-tags{display:flex;gap:6px;flex-wrap:wrap}
 .blog-post .post-tags span{font-family:var(--font-mono);font-size:.7rem;padding:2px 8px;border-radius:4px;background:rgba(57,211,53,.08);color:var(--accent);letter-spacing:.05em}
 .blog-empty{text-align:center;padding:40px;color:var(--text-muted);font-style:italic}
@@ -264,6 +268,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <li><a href="#lab">Lab</a></li>
       <li><a href="#connect">Connect</a></li>
       <li><a href="#console">Console</a></li>
+      <li><a href="#assets">Assets</a></li>
       <li><button class="theme-toggle" id="themeToggle" title="Toggle theme">☀️</button></li>
     </ul>
   </div>
@@ -621,9 +626,37 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <div class="servers-grid" id="consoleGrid">
         <!-- Filled by JS -->
       </div>
+
+      <!-- Uptime Timeline -->
+      <div id="uptimePanel" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <h3 style="font-family:var(--font-head);font-weight:600;font-size:1.05rem;color:var(--text);margin:0">📊 Uptime Timeline</h3>
+          <div style="display:flex;gap:6px" id="uptimeRangeTabs">
+            <button class="btn btn-outline" data-range="24h" style="padding:4px 12px;font-size:.75rem;background:var(--accent);color:var(--bg);border-color:var(--accent)">24h</button>
+            <button class="btn btn-outline" data-range="7d" style="padding:4px 12px;font-size:.75rem">7d</button>
+            <button class="btn btn-outline" data-range="30d" style="padding:4px 12px;font-size:.75rem">30d</button>
+          </div>
+        </div>
+        <div id="uptimeChart" style="display:grid;grid-template-columns:80px 1fr;gap:8px;align-items:center">
+          <div class="blog-empty" style="grid-column:span 2">Collecting uptime data — check back after status checks run.</div>
+        </div>
+        <p style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-top:8px;text-align:right">Green = online · Red = offline · Gray = no data</p>
+      </div>
       
       <!-- Action feedback -->
       <div id="consoleToast" style="display:none;position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:10px 20px;font-size:.85rem;z-index:999;animation:fadeIn .3s"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ASSETS / DOWNLOADS -->
+<section id="assets" style="display:none">
+  <div class="container">
+    <div class="section-label">/// assets</div>
+    <h2 class="section-title">Downloads</h2>
+    <p class="section-sub">FiveM assets, mods, configs — all proxied through the Knuckls CDN. No redirects, no source visible.</p>
+    <div class="assets-grid" id="assetsGrid">
+      <div class="blog-empty">Loading available assets...</div>
     </div>
   </div>
 </section>
@@ -647,6 +680,19 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 #console .btn-restart{color:var(--secondary);border-color:rgba(255,176,0,.3)}
 #console .btn-restart:hover{background:rgba(255,176,0,.1);border-color:var(--secondary)}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+#assets{transition:opacity .3s}
+#assets .assets-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+#assets .asset-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s}
+#assets .asset-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+#assets .asset-card .asset-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+#assets .asset-card .asset-header .asset-icon{font-size:2rem}
+#assets .asset-card .asset-header .asset-title{font-family:var(--font-head);font-weight:700;font-size:1.1rem;color:var(--text)}
+#assets .asset-card .asset-header .asset-type{font-size:.7rem;padding:2px 6px;border-radius:4px;background:rgba(57,211,53,.1);color:var(--accent);font-family:var(--font-mono);text-transform:uppercase}
+#assets .asset-card .asset-desc{color:var(--text-muted);font-size:.88rem;margin-bottom:12px}
+#assets .asset-card .asset-meta{display:flex;gap:12px;margin-bottom:12px;font-size:.78rem;color:var(--text-muted)}
+#assets .asset-card .btn-download{background:var(--accent);color:var(--bg);padding:8px 20px;font-size:.85rem;border:none;border-radius:6px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-head)}
+#assets .asset-card .btn-download:hover{background:#4be06a;transform:translateY(-1px)}
+#assets-empty{text-align:center;padding:40px;color:var(--text-muted)}
 </style>
 
 <!-- FOOTER -->
@@ -829,10 +875,15 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     }
     list.innerHTML = posts.map(p => `
       <div class="blog-post">
-        <div class="post-date">${p.date || ''}</div>
+        <div class="post-meta">
+          <span class="post-date">${p.date || ''}</span>
+          ${p.category ? `<span class="post-cat">${p.category}</span>` : ''}
+          ${p.version ? `<span class="post-version">v${p.version}</span>` : ''}
+        </div>
         <h3>${p.title || 'Untitled'}</h3>
-        <p>${p.body || ''}</p>
-        ${p.tags ? `<div class="post-tags">${p.tags.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
+        ${p.image ? `<img class="post-image" src="${p.image}" alt="${p.title}" loading="lazy">` : ''}
+        <div class="post-content">${(p.content || p.body || '').replace(/\n/g, '<br>')}</div>
+        ${p.author ? `<div style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);margin-top:8px">— ${p.author}</div>` : ''}
       </div>
     `).join('');
   } catch(e){
@@ -918,12 +969,87 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
       const r = await fetch(`/console.php?action=status&pass=${encodeURIComponent(PASS)}`, {signal:AbortSignal.timeout(8000)});
       const data = await r.json();
       renderGrid(data);
+      loadUptime();
       status.textContent = '● monitoring';
       last.textContent = `last: ${new Date().toLocaleTimeString()}`;
     } catch(e){
       status.textContent = '● error';
     }
   }
+
+  // ─── UPTIME TIMELINE ───────────────────────
+  let currentRange = '24h';
+  async function loadUptime(range = currentRange){
+    currentRange = range;
+    const chart = document.getElementById('uptimeChart');
+    try {
+      const r = await fetch(`/uptime.php?range=${range}&server=all`, {signal:AbortSignal.timeout(8000)});
+      const data = await r.json();
+      const servers = data.servers || {};
+      const ids = Object.keys(servers);
+      if(ids.length === 0){
+        chart.innerHTML = '<div class="blog-empty" style="grid-column:span 2">No data yet — status checks will populate this.</div>';
+        return;
+      }
+      chart.innerHTML = '';
+      ids.forEach(sid => {
+        const bars = servers[sid] || [];
+        const label = sid === 'palworld' ? 'PalWorld' : sid === 'starrupture' ? 'StarRupture' : sid === 'arma' ? 'Reforger' : sid === 'dayz' ? 'DayZ' : sid === 'hytale' ? 'Hytale' : sid;
+        // Label column
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);text-align:right;padding-right:4px;white-space:nowrap';
+        lbl.textContent = label;
+        chart.appendChild(lbl);
+        // Bar row
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:2px;height:20px;align-items:flex-end';
+        bars.forEach(b => {
+          const bar = document.createElement('div');
+          const wPct = 100 / bars.length;
+          bar.style.cssText = `width:${wPct}%;height:14px;border-radius:2px;position:relative;cursor:help`;
+          if(b.online === true) {
+            bar.style.background = 'var(--accent)';
+            bar.title = 'Online';
+          } else if(b.online === false) {
+            bar.style.background = 'var(--red)';
+            bar.title = 'Offline';
+          } else {
+            bar.style.background = 'var(--border)';
+            bar.title = 'No data';
+          }
+          bar.addEventListener('mouseenter', function(){
+            const d = new Date(b.from * 1000);
+            this.style.opacity = '.8';
+            this.title = `${d.toLocaleTimeString()} — ${b.online === true ? 'Online' : b.online === false ? 'Offline' : 'No data'}`;
+          });
+          bar.addEventListener('mouseleave', function(){ this.style.opacity = '1'; });
+          row.appendChild(bar);
+        });
+        chart.appendChild(row);
+      });
+    } catch(e){
+      chart.innerHTML = '<div class="blog-empty" style="grid-column:span 2">Could not load uptime data.</div>';
+    }
+  }
+
+  // Wire range tabs
+  document.querySelectorAll('#uptimeRangeTabs button').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const range = this.dataset.range;
+      document.querySelectorAll('#uptimeRangeTabs button').forEach(b => {
+        b.style.background = '';
+        b.style.color = '';
+        b.style.borderColor = '';
+      });
+      this.style.background = 'var(--accent)';
+      this.style.color = 'var(--bg)';
+      this.style.borderColor = 'var(--accent)';
+      loadUptime(range);
+    });
+  });
+
+  // Load uptime on auth
+  // (called from fetchStatus after render)
 
   // Render server cards with resources + actions
   function renderGrid(data){
@@ -1043,6 +1169,80 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
     section.style.display = 'block';
     document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = 'none'; });
     setTimeout(() => input?.focus(), 300);
+  }
+})();
+
+// ─── ASSETS / DOWNLOADS ───────────────────────────
+(async function(){
+  const section = document.getElementById('assets');
+  const grid   = document.getElementById('assetsGrid');
+
+  async function loadAssets(){
+    try {
+      const r = await fetch('/assets.json', {signal: AbortSignal.timeout(5000)});
+      const list = await r.json();
+      if(!list || list.length === 0){
+        grid.innerHTML = '<div id="assets-empty">No assets available yet.</div>';
+        return;
+      }
+      grid.innerHTML = list.map(a => {
+        const icon = a.type === 'zip' ? '📦' : a.type === 'lua' ? '📜' : a.type === 'cfg' ? '⚙️' : a.type === 'png' ? '🖼️' : a.type === 'yml' ? '📋' : '📄';
+        return `<div class="asset-card">
+          <div class="asset-header">
+            <span class="asset-icon">${icon}</span>
+            <span class="asset-title">${a.title}</span>
+            <span class="asset-type">${a.type}</span>
+          </div>
+          <div class="asset-desc">${a.desc}</div>
+          <div class="asset-meta">
+            <span>📏 ${a.size}</span>
+          </div>
+          <button class="btn-download" data-asset="${a.id}">⬇ Download</button>
+        </div>`;
+      }).join('');
+
+      grid.querySelectorAll('.btn-download').forEach(btn => {
+        btn.addEventListener('click', function(){
+          const asset = this.dataset.asset;
+          const orig = this.textContent;
+          this.textContent = '↓ downloading...';
+          this.disabled = true;
+          window.location.href = `/download.php?asset=${asset}`;
+          setTimeout(() => {
+            this.textContent = orig;
+            this.disabled = false;
+          }, 3000);
+        });
+      });
+    } catch(e){
+      grid.innerHTML = '<div id="assets-empty">Could not load assets list.</div>';
+    }
+  }
+
+  loadAssets();
+
+  // Nav wiring
+  document.querySelector('a[href="#assets"]')?.addEventListener('click', function(e){
+    e.preventDefault();
+    section.style.display = 'block';
+    document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = 'none'; });
+    document.getElementById('navLinks').classList.remove('open');
+    window.scrollTo(0, 0);
+  });
+
+  window.addEventListener('hashchange', ()=>{
+    if(window.location.hash === '#assets'){
+      section.style.display = 'block';
+      document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = 'none'; });
+    } else if(window.location.hash){
+      section.style.display = 'none';
+      document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = ''; });
+    }
+  });
+
+  if(window.location.hash === '#assets'){
+    section.style.display = 'block';
+    document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = 'none'; });
   }
 })();
 </script>

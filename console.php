@@ -98,6 +98,23 @@ if ($action === 'status') {
         ];
     }
     echo json_encode($result);
+
+    // ─── UPTIME LOGGING ─────────────────────────────
+    $state = [];
+    foreach ($result as $id => $s) {
+        $state[$id] = $s['online'] ?? false;
+    }
+    $logEntry = json_encode(['ts' => time(), 'servers' => $state]) . "\n";
+    $logFile = __DIR__ . '/uptime_log.json';
+    // Keep log to ~30KB (~500 checkpoints) by trimming oldest entries
+    $maxLines = 500;
+    $existing = file_exists($logFile) ? file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) : [];
+    $existing[] = $logEntry;
+    if (count($existing) > $maxLines) {
+        $existing = array_slice($existing, -$maxLines);
+    }
+    file_put_contents($logFile, implode("\n", $existing) . "\n");
+
     exit;
 }
 
