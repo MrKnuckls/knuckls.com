@@ -1244,50 +1244,83 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
   var logsInputRow = g('logsInputRow');
 
   if(logsConnect) logsConnect.addEventListener('click', function(){
-    if(ws) { ws.close(); ws = null; }
-    var server = logsServer ? logsServer.value : 'palworld';
-    var url = 'wss://node.knucklsgames.com/api/servers/' + server + '/ws';
-    try {
-      ws = new WebSocket(url);
-      ws.onopen = function(){
-        if(logsStatus) logsStatus.textContent = '● Connected';
-        if(logsConnect) logsConnect.style.display = 'none';
-        if(logsDisconnect) logsDisconnect.style.display = 'inline';
-        if(logsInputRow) logsInputRow.style.display = 'flex';
-      };
-      ws.onmessage = function(ev){
-        if(logsContainer){
-          var d = document.createElement('div');
-          d.textContent = ev.data;
-          logsContainer.appendChild(d);
-          logsContainer.scrollTop = logsContainer.scrollHeight;
-          if(logsContainer.children.length > 500) logsContainer.removeChild(logsContainer.firstChild);
+      if(ws) { ws.close(); ws = null; }
+      var server = logsServer ? logsServer.value : 'palworld';
+      // Get WebSocket token from server-side (keeps API key secret)
+      fetch('/console.php?action=ws&server=' + server + '&pass=' + encodeURIComponent(PASS))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.error || !d.socket){
+          if(logsStatus) logsStatus.textContent = 'Failed to get WebSocket token';
+          return;
         }
-      };
-      ws.onclose = function(){
-        if(logsStatus) logsStatus.textContent = 'Disconnected';
-        if(logsConnect) logsConnect.style.display = 'inline';
-        if(logsDisconnect) logsDisconnect.style.display = 'none';
-        if(logsInputRow) logsInputRow.style.display = 'none';
-        ws = null;
-      };
-      ws.onerror = function(){
-        if(logsStatus) logsStatus.textContent = 'Connection error (check panel)';
-      };
-    } catch(e){
-      if(logsStatus) logsStatus.textContent = 'Connection failed';
-    }
-  });
+        try {
+          ws = new WebSocket(d.socket);
+          ws.onopen = function(){
+            // Authenticate with the token from the panel
+            ws.send(JSON.stringify({event:'auth', args:[d.token]}));
+            if(logsStatus) logsStatus.textContent = '● Connected';
+            if(logsConnect) logsConnect.style.display = 'none';
+            if(logsDisconnect) logsDisconnect.style.display = 'inline';
+            if(logsInputRow) logsInputRow.style.display = 'flex';
+          };
+          ws.onmessage = function(ev){
+            try {
+              var msg = JSON.parse(ev.data);
+              // Console output lines come as {event:'console output', args:['line1\nline2\n...']}
+              if(msg.event === 'console output' && msg.args && msg.args.length){
+                var lines = msg.args[0];
+                if(logsContainer){
+                  lines.split('\n').forEach(function(line){
+                    if(!line) return;
+                    var d = document.createElement('div');
+                    d.textContent = line;
+                    logsContainer.appendChild(d);
+                  });
+                  logsContainer.scrollTop = logsContainer.scrollHeight;
+                  if(logsContainer.children.length > 500) {
+                    while(logsContainer.children.length > 350) logsContainer.removeChild(logsContainer.firstChild);
+                  }
+                }
+              }
+              // Token expiry — reconnect
+              if(msg.event === 'token expiring'){
+                fetch('/console.php?action=ws&server=' + server + '&pass=' + encodeURIComponent(PASS))
+                .then(function(r2){ return r2.json(); })
+                .then(function(d2){
+                  if(d2.token) ws.send(JSON.stringify({event:'auth', args:[d2.token]}));
+                });
+              }
+            } catch(e2){}
+          };
+          ws.onclose = function(){
+            if(logsStatus) logsStatus.textContent = 'Disconnected';
+            if(logsConnect) logsConnect.style.display = 'inline';
+            if(logsDisconnect) logsDisconnect.style.display = 'none';
+            if(logsInputRow) logsInputRow.style.display = 'none';
+            ws = null;
+          };
+          ws.onerror = function(){
+            if(logsStatus) logsStatus.textContent = 'Connection error';
+          };
+        } catch(e){
+          if(logsStatus) logsStatus.textContent = 'Connection failed';
+        }
+      });
+    });
 
   if(logsDisconnect) logsDisconnect.addEventListener('click', function(){
     if(ws) { ws.close(); ws = null; }
   });
 
   if(logsCmdSend) logsCmdSend.addEventListener('click', function(){
-    if(!ws || !logsCmdInput) return;
-    var cmd = logsCmdInput.value.trim();
-    if(cmd) { ws.send(cmd); logsCmdInput.value = ''; }
-  });
+      if(!logsCmdInput) return;
+      var cmd = logsCmdInput.value.trim();
+      if(!cmd) return;
+      var server = logsServer ? logsServer.value : 'palworld';
+      fetch('/console.php?action=command&server=' + encodeURIComponent(server) + '&cmd=' + encodeURIComponent(cmd) + '&pass=' + encodeURIComponent(PASS))
+      .then(function(){ logsCmdInput.value = ''; });
+    });
 
   if(logsCmdInput) logsCmdInput.addEventListener('keydown', function(e){
     if(e.key === 'Enter' && logsCmdSend) logsCmdSend.click();
