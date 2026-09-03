@@ -41,11 +41,7 @@ if ($file['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
-// Max 100MB
-if ($file['size'] > 100 * 1024 * 1024) {
-    echo json_encode(['ok' => false, 'msg' => 'File too large (max 100MB)']);
-    exit;
-}
+// PHP config is the real cap — no artificial limit here
 
 // Create dirs
 if (!is_dir($FILES_DIR)) {
