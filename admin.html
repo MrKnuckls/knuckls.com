@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knuckls — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1117;--surface:#161b22;--surface-hover:#1c2333;--text:#e6edf3;--text-muted:#8b949e;--accent:#39d353;--accent-glow:rgba(57,211,83,.35);--border:#30363d;--red:#ff5555;--font-head:'Rajdhani',sans-serif;--font-body:'Inter',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html.light{--bg:#f6f8fa;--surface:#ffffff;--surface-hover:#f0f2f5;--text:#1f2328;--text-muted:#656d76;--accent:#2da44e;--border:#d0d7de;--red:#cf222e}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+input,textarea,select{font-family:var(--font-body);font-size:.9rem;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 12px;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+textarea{resize:vertical;min-height:80px;font-family:var(--font-mono);font-size:.85rem;line-height:1.5}
+button{cursor:pointer;font-family:var(--font-body);border-radius:6px;transition:all .2s;font-size:.85rem;font-weight:500}
+.btn{padding:8px 20px;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.btn:hover{background:var(--surface-hover);border-color:var(--text-muted)}
+.btn-primary{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600}
+.btn-primary:hover{filter:brightness(1.15)}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-danger:hover{filter:brightness(1.15)}
+.btn-sm{padding:4px 12px;font-size:.78rem}
+.btn-group{display:flex;gap:6px}
+
+/* Layout */
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sidebar h1{font-family:var(--font-head);font-size:1.3rem;padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.sidebar h1 span{color:var(--accent)}
+.sidebar .nav-item{padding:10px 20px;display:flex;align-items:center;gap:10px;color:var(--text-muted);cursor:pointer;transition:all .2s;font-size:.85rem;border-left:3px solid transparent}
+.sidebar .nav-item:hover{color:var(--text);background:var(--surface-hover)}
+.sidebar .nav-item.active{color:var(--text);background:var(--surface-hover);border-left-color:var(--accent)}
+.sidebar .nav-item .icon{font-size:1.1rem;width:20px;text-align:center}
+.sidebar .spacer{flex:1}
+.sidebar .back-link{padding:14px 20px;border-top:1px solid var(--border);font-size:.8rem;color:var(--text-muted);display:flex;align-items:center;gap:8px}
+.sidebar .back-link:hover{color:var(--accent)}
+.main{flex:1;padding:30px 40px;max-width:1000px}
+.main h2{font-family:var(--font-head);font-size:1.5rem;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+
+/* Gate */
+.gate{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px}
+.gate h1{font-family:var(--font-head);font-size:2rem}
+.gate h1 span{color:var(--accent)}
+.gate input{width:260px;text-align:center;font-family:var(--font-mono)}
+.gate .msg{font-size:.8rem;color:var(--text-muted);min-height:1.2em}
+.gate .msg.error{color:var(--red)}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px}
+.card h3{font-size:.9rem;font-weight:600;margin-bottom:12px;color:var(--text)}
+.card .field{margin-bottom:14px}
+.card .field label{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px}
+.card .field input,.card .field textarea,.card .field select{width:100%}
+.card .field-row{display:flex;gap:12px}
+.card .field-row > *{flex:1}
+
+/* Asset list */
+.asset-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface-hover);border-radius:6px;margin-bottom:6px;gap:12px;font-size:.85rem}
+.asset-item .title{font-weight:600;flex:1}
+.asset-item .meta{color:var(--text-muted);font-size:.75rem;white-space:nowrap}
+.asset-item .actions{white-space:nowrap}
+
+/* Blog post list */
+.post-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface-hover);border-radius:6px;margin-bottom:6px;gap:12px}
+.post-item .title{font-weight:600;flex:1}
+.post-item .date{color:var(--text-muted);font-size:.75rem}
+.post-item .actions{white-space:nowrap}
+
+/* Toast */
+.toast{position:fixed;bottom:30px;right:30px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 20px;box-shadow:0 4px 20px rgba(0,0,0,.5);font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .3s;z-index:1000}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-color:var(--accent)}
+.toast.error{border-color:var(--red)}
+
+/* Theme preview */
+.theme-preview{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.theme-preview .swatch{width:100px;height:60px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;font-family:var(--font-mono)}
+.theme-preview .swatch-bg{background:var(--bg);color:var(--text)}
+.theme-preview .swatch-surface{background:var(--surface);color:var(--text)}
+.theme-preview .swatch-accent{background:var(--accent);color:var(--bg)}
+.theme-preview .swatch-text{background:var(--text);color:var(--bg)}
+
+/* Page list */
+.page-item{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 14px;background:var(--surface-hover);border-radius:6px;margin-bottom:6px;gap:12px}
+.page-item .info{flex:1}
+.page-item .info .title{font-weight:600}
+.page-item .info .preview{color:var(--text-muted);font-size:.78rem;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.page-item .actions{white-space:nowrap}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:999}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;width:560px;max-width:90vw;max-height:80vh;overflow-y:auto}
+.modal h3{font-family:var(--font-head);font-size:1.2rem;margin-bottom:16px}
+.modal .field{margin-bottom:12px}
+.modal .field label{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px}
+.modal .field input,.modal .field textarea,.modal .field select{width:100%}
+.modal .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+::selection{background:var(--accent);color:var(--bg)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div id="gate" class="gate">
+  <h1>🔐 <span>Knuckls</span> Admin</h1>
+  <input type="password" id="adminPass" placeholder="Enter password" autocomplete="off" onkeydown="if(event.key==='Enter') checkPass()">
+  <button class="btn btn-primary" onclick="checkPass()">Unlock</button>
+  <div id="gateMsg" class="msg"></div>
+</div>
+
+<!-- App -->
+<div id="app" class="app" style="display:none">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h1>⚙️ <span>Admin</span></h1>
+    <div class="nav-item active" data-tab="pages"><span class="icon">📝</span> Pages</div>
+    <div class="nav-item" data-tab="servers"><span class="icon">🖥️</span> Servers</div>
+    <div class="nav-item" data-tab="assets"><span class="icon">📦</span> Assets</div>
+    <div class="nav-item" data-tab="blog"><span class="icon">📰</span> Blog</div>
+    <div class="nav-item" data-tab="theme"><span class="icon">🎨</span> Theme</div>
+    <div class="nav-item" data-tab="uploads"><span class="icon">⬆️</span> Uploads</div>
+    <div class="spacer"></div>
+    <a href="/" class="back-link">← Back to site</a>
+  </div>
+
+  <!-- Main -->
+  <div class="main" id="mainArea">
+
+    <!-- PAGES -->
+    <div id="tab-pages" class="tab-content">
+      <h2>📝 Site Pages</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:.85rem">Edit the text content on your site. Changes save to the server and the front page will load them dynamically.</p>
+      <div id="pagesList"></div>
+      <button class="btn btn-primary" onclick="savePages()" style="margin-top:12px">💾 Save All Pages</button>
+      <button class="btn" onclick="resetPages()" style="margin-left:8px">↺ Reset to Defaults</button>
+    </div>
+
+    <!-- SERVERS -->
+    <div id="tab-servers" class="tab-content" style="display:none">
+      <h2>🖥️ Edit Servers</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:.85rem">Manage your game server listings — names, descriptions, and visibility.</p>
+      <div id="serversList"></div>
+      <button class="btn btn-primary" onclick="saveServers()">💾 Save Servers</button>
+    </div>
+
+    <!-- ASSETS -->
+    <div id="tab-assets" class="tab-content" style="display:none">
+      <h2>📦 Assets / Downloads</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:.85rem">Add, edit, or remove downloadable assets (FiveM mods, scripts, etc). Files must be uploaded to Google Drive first — paste the file ID here.</p>
+      <button class="btn btn-primary" onclick="showAssetModal()" style="margin-bottom:16px">➕ New Asset</button>
+      <div id="assetsList"></div>
+    </div>
+
+    <!-- BLOG -->
+    <div id="tab-blog" class="tab-content" style="display:none">
+      <h2>📰 Dev Blog</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:.85rem">Write and manage your development blog posts.</p>
+      <button class="btn btn-primary" onclick="showPostModal()" style="margin-bottom:16px">➕ New Post</button>
+      <div id="blogList"></div>
+    </div>
+
+    <!-- THEME -->
+    <div id="tab-theme" class="tab-content" style="display:none">
+      <h2>🎨 Theme Customizer</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:.85rem">Tweak your site colors. Changes take effect site-wide immediately.</p>
+      <div class="card" style="max-width:500px">
+        <div class="field">
+          <label>Accent Color (green/cyan)</label>
+          <input type="color" id="th_accent" value="#39d353" style="width:60px;height:40px;padding:2px;cursor:pointer" oninput="previewTheme()">
+        </div>
+        <div class="field">
+          <label>Secondary Color (amber/gold)</label>
+          <input type="color" id="th_secondary" value="#ffb000" style="width:60px;height:40px;padding:2px;cursor:pointer" oninput="previewTheme()">
+        </div>
+        <div class="field">
+          <label>Background</label>
+          <input type="color" id="th_bg" value="#0d1117" style="width:60px;height:40px;padding:2px;cursor:pointer" oninput="previewTheme()">
+        </div>
+        <div class="field">
+          <label>Surface (card background)</label>
+          <input type="color" id="th_surface" value="#161b22" style="width:60px;height:40px;padding:2px;cursor:pointer" oninput="previewTheme()">
+        </div>
+        <div class="field">
+          <label>Text Color</label>
+          <input type="color" id="th_text" value="#e6edf3" style="width:60px;height:40px;padding:2px;cursor:pointer" oninput="previewTheme()">
+        </div>
+        <div class="theme-preview" id="themePreview">
+          <div class="swatch swatch-bg">BG</div>
+          <div class="swatch swatch-surface">SURFACE</div>
+          <div class="swatch swatch-accent">ACCENT</div>
+          <div class="swatch swatch-text">TEXT</div>
+        </div>
+        <div class="field-row">
+          <button class="btn btn-primary" onclick="saveTheme()">💾 Save Theme</button>
+          <button class="btn" onclick="resetTheme()">↺ Reset Default</button>
+          <button class="btn" onclick="toggleLight()">☀️ Toggle Light</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPLOADS -->
+    <div id="tab-uploads" class="tab-content" style="display:none">
+      <h2>⬆️ File Uploads</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:.85rem">Upload files directly to your server. Max 2GB per file.</p>
+      <div class="card">
+        <div class="field">
+          <label>Select file</label>
+          <input type="file" id="uploadFileInput" style="background:var(--surface-hover);padding:10px;border:1px dashed var(--border);width:100%;cursor:pointer">
+        </div>
+        <div class="field">
+          <label>Upload password (for admin verification)</label>
+          <input type="password" id="uploadPassInput" value="knuckls2026" style="width:200px">
+        </div>
+        <button class="btn btn-primary" onclick="doUpload()">⬆️ Upload</button>
+        <div id="uploadProgress" style="margin-top:12px;font-size:.8rem;color:var(--text-muted)"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modals -->
+<div id="assetModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeAssetModal()">
+  <div class="modal">
+    <h3 id="assetModalTitle">➕ New Asset</h3>
+    <div class="field">
+      <label>Asset ID (unique slug, e.g. 'my-mod')</label>
+      <input id="am_id" placeholder="my-cool-mod">
+    </div>
+    <div class="field">
+      <label>Title</label>
+      <input id="am_title" placeholder="My Cool Mod">
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="am_desc" placeholder="What is this asset?"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Type</label>
+        <select id="am_type">
+          <option value="zip">📦 Zip</option>
+          <option value="lua">📜 Lua</option>
+          <option value="png">🖼️ PNG</option>
+          <option value="other">📄 Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Size (e.g. '15 MB')</label>
+        <input id="am_size" placeholder="15 MB">
+      </div>
+    </div>
+    <div class="field">
+      <label>Google Drive File ID</label>
+      <input id="am_drive" placeholder="1Un4Z7dQGmVSuC1alnGfCQmrqTZMl8RNb">
+    </div>
+    <div class="field">
+      <label>Preview Image URL (optional)</label>
+      <input id="am_preview" placeholder="assets/img/preview.png">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveAsset()">💾 Save</button>
+      <button class="btn" onclick="closeAssetModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="postModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closePostModal()">
+  <div class="modal">
+    <h3 id="postModalTitle">📝 New Blog Post</h3>
+    <div class="field">
+      <label>Post ID (unique slug, e.g. 'unity-6-dev-log')</label>
+      <input id="pm_id" placeholder="my-post-slug">
+    </div>
+    <div class="field">
+      <label>Title</label>
+      <input id="pm_title" placeholder="Exciting Update!">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Category</label>
+        <select id="pm_cat">
+          <option value="Dev Log">Dev Log</option>
+          <option value="Update">Update</option>
+          <option value="Release">Release</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Image URL (optional)</label>
+        <input id="pm_image" placeholder="assets/img/blog/...">
+      </div>
+    </div>
+    <div class="field">
+      <label>Content (markdown-style supported)</label>
+      <textarea id="pm_content" placeholder="Write your post here..." style="min-height:200px"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="savePost()">💾 Publish</button>
+      <button class="btn" onclick="closePostModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ─── State ──────────────────────────────────────────
+var PASS = localStorage.getItem('adminPass') || '';
+var PAGES = {};
+var SERVERS_DATA = {};
+var ASSETS = [];
+var POSTS = [];
+var editingAsset = null;
+var editingPost = null;
+
+// ─── Auth ────────────────────────────────────────────
+function checkPass(){
+  var inp = document.getElementById('adminPass');
+  var msg = document.getElementById('gateMsg');
+  PASS = inp.value.trim();
+  if(!PASS){ msg.textContent = 'Enter the password'; msg.className='msg error'; return; }
+  fetch('/console.php?action=auth&pass=' + encodeURIComponent(PASS))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.authed){
+        localStorage.setItem('adminPass', PASS);
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        msg.textContent = '';
+        loadAll();
+      } else {
+        msg.textContent = 'Wrong password'; msg.className='msg error';
+      }
+    });
+}
+
+// Auto-login if pass stored
+if(localStorage.getItem('adminPass')){
+  PASS = localStorage.getItem('adminPass');
+  fetch('/console.php?action=auth&pass=' + encodeURIComponent(PASS))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.authed){
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadAll();
+      } else {
+        localStorage.removeItem('adminPass');
+      }
+    });
+}
+
+// ─── Navigation ─────────────────────────────────────
+document.querySelectorAll('.sidebar .nav-item').forEach(function(el){
+  el.addEventListener('click', function(){
+    document.querySelectorAll('.sidebar .nav-item').forEach(function(e){ e.classList.remove('active'); });
+    this.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(function(t){ t.style.display = 'none'; });
+    document.getElementById('tab-' + this.dataset.tab).style.display = 'block';
+  });
+});
+
+// ─── Load all data ──────────────────────────────────
+function loadAll(){
+  loadPages();
+  loadServers();
+  loadAssets();
+  loadPosts();
+  loadTheme();
+}
+
+// ─── Toast ──────────────────────────────────────────
+function toast(msg, type){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type||'success') + ' show';
+  clearTimeout(t._hide);
+  t._hide = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ============================================================
+//  PAGES
+// ============================================================
+function loadPages(){
+  fetch('/console.php?action=admin_pages_read&pass=' + encodeURIComponent(PASS))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.pages) PAGES = d.pages;
+      else PAGES = getDefaultPages();
+      renderPages();
+    })
+    .catch(function(){ PAGES = getDefaultPages(); renderPages(); });
+}
+
+function getDefaultPages(){
+  return {
+    hero_tagline: 'Gamer. Server host. Lab rat.',
+    hero_desc: 'Shaun (aka MrKnuckls) — running game servers, building projects, and home-labbin\' it in Dayton, OH.',
+    about_text: 'I\'m a gamer, server admin, and hobbyist developer based in Dayton, Ohio. I run game servers for PalWorld, StarRupture, Arma Reforger, DayZ, and Hytale. When I\'m not keeping servers alive, I\'m working on projects like Knuckls OS, the SanRoque game in Unity 6, or tinkering with my home lab.',
+    server_palworld_desc: '😮 Casual/co-op | Max Pals enabled | Friendly base building',
+    server_starrupture_desc: '🌟 Extraction survival | PvPvE | Sci-fi frontier',
+    server_arma_desc: '⚔️ Realism milsim | Modded | Tactical operations',
+    server_dayz_desc: '🧟 Survival | PvPvE | Chernarus+',
+    server_hytale_desc: '🏰 Adventure | Early access | Community builds',
+    projects_title: 'Projects & Experiments',
+    projects_desc: 'Stuff I\'ve built, am building, or broke and fixed.',
+    footer_text: 'Built with ☕ and ❤️ by Shaun (MrKnuckls). Powered by Hermes Agent.',
+    section_games: 'Game Servers',
+    section_projects: 'Projects',
+    section_blog: 'Dev Blog',
+    section_assets: 'Downloads'
+  };
+}
+
+function renderPages(){
+  var html = '';
+  Object.keys(PAGES).forEach(function(k){
+    var label = k.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+    var val = PAGES[k] || '';
+    var isLong = k === 'about_text' || k === 'hero_desc' || k === 'footer_text';
+    html += '<div class="page-item">' +
+      '<div class="info"><div class="title">' + label + '</div>' +
+      '<div class="preview">' + val.substring(0,80) + (val.length>80?'...':'') + '</div></div>' +
+      '<div class="actions"><button class="btn btn-sm" onclick="editPage(\'' + k + '\')">✏️ Edit</button></div></div>';
+  });
+  document.getElementById('pagesList').innerHTML = html;
+}
+
+function editPage(key){
+  var val = PAGES[key] || '';
+  var label = key.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+  var html = '<div class="modal-overlay" id="pageEditOverlay" onclick="if(event.target===this)closePageEdit()"><div class="modal">' +
+    '<h3>✏️ ' + label + '</h3>' +
+    '<div class="field">' +
+    '<textarea id="pageEditVal" style="min-height:' + (val.length>80?'200px':'80px') + '">' + val.replace(/</g,'&lt;') + '</textarea></div>' +
+    '<div class="btn-row"><button class="btn btn-primary" onclick="savePageEdit(\'' + key + '\')">💾 Save</button>' +
+    '<button class="btn" onclick="closePageEdit()">Cancel</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+  document.getElementById('pageEditVal').focus();
+}
+
+function closePageEdit(){
+  var el = document.getElementById('pageEditOverlay');
+  if(el) el.remove();
+}
+
+function savePageEdit(key){
+  var val = document.getElementById('pageEditVal').value.trim();
+  PAGES[key] = val;
+  renderPages();
+  closePageEdit();
+  toast('Page updated — click "Save All" to persist');
+}
+
+function savePages(){
+  fetch('/console.php?action=admin_pages_save&pass=' + encodeURIComponent(PASS), {
+    method: 'POST',
+    body: JSON.stringify({pages: PAGES}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok) toast('All pages saved!');
+    else toast('Save failed: ' + (d.msg||'unknown'), 'error');
+  })
+  .catch(function(){ toast('Network error', 'error'); });
+}
+
+function resetPages(){
+  if(!confirm('Reset all pages to defaults?')) return;
+  PAGES = getDefaultPages();
+  renderPages();
+  toast('Pages reset — click "Save All" to persist');
+}
+
+// ============================================================
+//  SERVERS
+// ============================================================
+function loadServers(){
+  var defaultServers = [
+    {id:'palworld', name:'Knuckls Palworld', game:'PalWorld', desc:'😮 Casual/co-op | Max Pals enabled | Friendly base building'},
+    {id:'starrupture', name:'Knuckls_StarRupture', game:'StarRupture', desc:'🌟 Extraction survival | PvPvE | Sci-fi frontier'},
+    {id:'arma', name:'Knuckls Arma Reforger Server', game:'Arma Reforger', desc:'⚔️ Realism milsim | Modded | Tactical operations'},
+    {id:'dayz', name:'Knuckls DayZ Server', game:'DayZ', desc:'🧟 Survival | PvPvE | Chernarus+'},
+    {id:'hytale', name:'Knuckls Hytale Server', game:'Hytale', desc:'🏰 Adventure | Early access | Community builds'}
+  ];
+  fetch('/console.php?action=admin_servers_read&pass=' + encodeURIComponent(PASS))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.servers) SERVERS_DATA = d.servers;
+      else { SERVERS_DATA = {}; defaultServers.forEach(function(s){ SERVERS_DATA[s.id]=s; }); }
+      renderServers();
+    })
+    .catch(function(){
+      defaultServers.forEach(function(s){ SERVERS_DATA[s.id]=s; });
+      renderServers();
+    });
+}
+
+function renderServers(){
+  var ids = ['palworld','starrupture','arma','dayz','hytale'];
+  var html = '';
+  ids.forEach(function(id){
+    var s = SERVERS_DATA[id] || {id:id, name:'', game:'', desc:''};
+    html += '<div class="card"><div class="field-row">' +
+      '<div class="field"><label>Name</label><input class="sv_name" value="' + (s.name||'').replace(/"/g,'&quot;') + '" data-id="' + id + '"></div>' +
+      '<div class="field" style="flex:0.5"><label>Game</label><input class="sv_game" value="' + (s.game||'').replace(/"/g,'&quot;') + '" data-id="' + id + '"></div></div>' +
+      '<div class="field"><label>Description</label><textarea class="sv_desc" data-id="' + id + '">' + (s.desc||'').replace(/</g,'&lt;') + '</textarea></div></div>';
+  });
+  document.getElementById('serversList').innerHTML = html;
+}
+
+function saveServers(){
+  document.querySelectorAll('.sv_name').forEach(function(el){
+    var id = el.dataset.id;
+    if(!SERVERS_DATA[id]) SERVERS_DATA[id] = {id:id};
+    SERVERS_DATA[id].name = el.value;
+    SERVERS_DATA[id].id = id;
+  });
+  document.querySelectorAll('.sv_game').forEach(function(el){
+    var id = el.dataset.id;
+    if(!SERVERS_DATA[id]) SERVERS_DATA[id] = {id:id};
+    SERVERS_DATA[id].game = el.value;
+  });
+  document.querySelectorAll('.sv_desc').forEach(function(el){
+    var id = el.dataset.id;
+    if(!SERVERS_DATA[id]) SERVERS_DATA[id] = {id:id};
+    SERVERS_DATA[id].desc = el.value;
+  });
+  var arr = [];
+  ['palworld','starrupture','arma','dayz','hytale'].forEach(function(id){
+    if(SERVERS_DATA[id]) arr.push(SERVERS_DATA[id]);
+  });
+  fetch('/console.php?action=admin_servers_save&pass=' + encodeURIComponent(PASS), {
+    method: 'POST', body: JSON.stringify({servers: arr}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok) toast('Servers saved!');
+    else toast('Save failed', 'error');
+  })
+  .catch(function(){ toast('Network error', 'error'); });
+}
+
+// ============================================================
+//  ASSETS
+// ============================================================
+function loadAssets(){
+  fetch('/console.php?action=admin_assets_read&pass=' + encodeURIComponent(PASS))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      ASSETS = d.assets || [];
+      renderAssets();
+    })
+    .catch(function(){ ASSETS = []; renderAssets(); });
+}
+
+function renderAssets(){
+  if(ASSETS.length === 0){
+    document.getElementById('assetsList').innerHTML = '<div style="color:var(--text-muted);padding:20px;text-align:center">No assets yet. Click "New Asset" to add one.</div>';
+    return;
+  }
+  var html = ASSETS.map(function(a){
+    return '<div class="asset-item"><span class="title">' + a.title + '</span>' +
+      '<span class="meta">' + (a.type||'') + ' — ' + (a.size||'?') + '</span>' +
+      '<div class="actions"><button class="btn btn-sm" onclick="editAsset(\'' + a.id + '\')">✏️</button> ' +
+      '<button class="btn btn-sm btn-danger" onclick="deleteAsset(\'' + a.id + '\')">🗑️</button></div></div>';
+  }).join('');
+  document.getElementById('assetsList').innerHTML = html;
+}
+
+function showAssetModal(data){
+  editingAsset = data || null;
+  document.getElementById('assetModalTitle').textContent = data ? '✏️ Edit ' + data.title : '➕ New Asset';
+  document.getElementById('am_id').value = data ? data.id : '';
+  document.getElementById('am_id').disabled = !!data;
+  document.getElementById('am_title').value = data ? data.title : '';
+  document.getElementById('am_desc').value = data ? data.desc : '';
+  document.getElementById('am_type').value = data ? data.type : 'zip';
+  document.getElementById('am_size').value = data ? data.size : '';
+  document.getElementById('am_drive').value = data ? data.drive_id : '';
+  document.getElementById('am_preview').value = data ? (data.preview||'') : '';
+  document.getElementById('assetModal').style.display = 'flex';
+}
+
+function closeAssetModal(){
+  document.getElementById('assetModal').style.display = 'none';
+  editingAsset = null;
+}
+
+function saveAsset(){
+  var id = document.getElementById('am_id').value.trim();
+  var title = document.getElementById('am_title').value.trim();
+  var desc = document.getElementById('am_desc').value.trim();
+  var type = document.getElementById('am_type').value;
+  var size = document.getElementById('am_size').value.trim();
+  var drive = document.getElementById('am_drive').value.trim();
+  var preview = document.getElementById('am_preview').value.trim();
+  if(!id || !title){ toast('ID and Title are required', 'error'); return; }
+  var asset = {id:id, title:title, desc:desc, type:type, size:size, drive_id:drive, preview:preview, date:new Date().toISOString().split('T')[0]};
+  if(editingAsset){
+    var idx = ASSETS.findIndex(function(a){ return a.id === editingAsset.id; });
+    if(idx >= 0) ASSETS[idx] = asset;
+  } else {
+    if(ASSETS.find(function(a){ return a.id === id; })){ toast('Asset ID already exists', 'error'); return; }
+    ASSETS.push(asset);
+  }
+  closeAssetModal();
+  saveAssetsToServer();
+  renderAssets();
+}
+
+function deleteAsset(id){
+  if(!confirm('Delete ' + id + '?')) return;
+  ASSETS = ASSETS.filter(function(a){ return a.id !== id; });
+  saveAssetsToServer();
+  renderAssets();
+}
+
+function saveAssetsToServer(){
+  fetch('/console.php?action=admin_assets_save&pass=' + encodeURIComponent(PASS), {
+    method: 'POST', body: JSON.stringify({assets: ASSETS}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok) toast('Assets saved!');
+    else toast('Save failed', 'error');
+  })
+  .catch(function(){ toast('Network error', 'error'); });
+}
+
+// ============================================================
+//  BLOG
+// ============================================================
+function loadPosts(){
+  fetch('/console.php?action=admin_blog_read&pass=' + encodeURIComponent(PASS))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      POSTS = d.posts || [];
+      renderPosts();
+    })
+    .catch(function(){ POSTS = []; renderPosts(); });
+}
+
+function renderPosts(){
+  if(POSTS.length === 0){
+    document.getElementById('blogList').innerHTML = '<div style="color:var(--text-muted);padding:20px;text-align:center">No blog posts yet. Write your first one!</div>';
+    return;
+  }
+  var html = POSTS.map(function(p){
+    return '<div class="post-item"><span class="title">' + p.title + '</span>' +
+      '<span class="date">' + (p.date||'') + ' · ' + (p.category||'Dev Log') + '</span>' +
+      '<div class="actions"><button class="btn btn-sm" onclick="editPost(\'' + p.id + '\')">✏️</button> ' +
+      '<button class="btn btn-sm btn-danger" onclick="deletePost(\'' + p.id + '\')">🗑️</button></div></div>';
+  }).join('');
+  document.getElementById('blogList').innerHTML = html;
+}
+
+function showPostModal(data){
+  editingPost = data || null;
+  document.getElementById('postModalTitle').textContent = data ? '✏️ Edit ' + data.title : '📝 New Post';
+  document.getElementById('pm_id').value = data ? data.id : '';
+  document.getElementById('pm_id').disabled = !!data;
+  document.getElementById('pm_title').value = data ? data.title : '';
+  document.getElementById('pm_cat').value = data ? (data.category||'Dev Log') : 'Dev Log';
+  document.getElementById('pm_image').value = data ? (data.image||'') : '';
+  document.getElementById('pm_content').value = data ? data.content : '';
+  document.getElementById('postModal').style.display = 'flex';
+}
+
+function closePostModal(){
+  document.getElementById('postModal').style.display = 'none';
+  editingPost = null;
+}
+
+function savePost(){
+  var id = document.getElementById('pm_id').value.trim();
+  var title = document.getElementById('pm_title').value.trim();
+  var cat = document.getElementById('pm_cat').value;
+  var image = document.getElementById('pm_image').value.trim();
+  var content = document.getElementById('pm_content').value.trim();
+  if(!id || !title){ toast('ID and Title required', 'error'); return; }
+  var post = {id:id, title:title, category:cat, image:image, content:content, date:new Date().toISOString().split('T')[0]};
+  if(editingPost){
+    var idx = POSTS.findIndex(function(p){ return p.id === editingPost.id; });
+    if(idx >= 0) POSTS[idx] = post;
+  } else {
+    if(POSTS.find(function(p){ return p.id === id; })){ toast('Post ID already exists', 'error'); return; }
+    POSTS.unshift(post);
+  }
+  closePostModal();
+  savePostsToServer();
+  renderPosts();
+}
+
+function deletePost(id){
+  if(!confirm('Delete post?')) return;
+  POSTS = POSTS.filter(function(p){ return p.id !== id; });
+  savePostsToServer();
+  renderPosts();
+}
+
+function savePostsToServer(){
+  fetch('/console.php?action=admin_blog_save&pass=' + encodeURIComponent(PASS), {
+    method: 'POST', body: JSON.stringify({posts: POSTS}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok) toast('Blog saved!');
+    else toast('Save failed', 'error');
+  })
+  .catch(function(){ toast('Network error', 'error'); });
+}
+
+// ============================================================
+//  THEME
+// ============================================================
+function loadTheme(){
+  fetch('/console.php?action=admin_theme_read&pass=' + encodeURIComponent(PASS))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.theme){
+        document.getElementById('th_accent').value = d.theme.accent||'#39d353';
+        document.getElementById('th_secondary').value = d.theme.secondary||'#ffb000';
+        document.getElementById('th_bg').value = d.theme.bg||'#0d1117';
+        document.getElementById('th_surface').value = d.theme.surface||'#161b22';
+        document.getElementById('th_text').value = d.theme.text||'#e6edf3';
+        previewTheme();
+      }
+    })
+    .catch(function(){});
+}
+
+function previewTheme(){
+  var accent = document.getElementById('th_accent').value;
+  var bg = document.getElementById('th_bg').value;
+  var surface = document.getElementById('th_surface').value;
+  var text = document.getElementById('th_text').value;
+  document.documentElement.style.setProperty('--accent', accent);
+  document.documentElement.style.setProperty('--bg', bg);
+  document.documentElement.style.setProperty('--surface', surface);
+  document.documentElement.style.setProperty('--text', text);
+  // Update preview swatches
+  document.querySelectorAll('.swatch-bg').forEach(function(s){ s.style.background=bg; s.style.color=text; });
+  document.querySelectorAll('.swatch-surface').forEach(function(s){ s.style.background=surface; s.style.color=text; });
+  document.querySelectorAll('.swatch-accent').forEach(function(s){ s.style.background=accent; s.style.color=bg; });
+  document.querySelectorAll('.swatch-text').forEach(function(s){ s.style.background=text; s.style.color=bg; });
+}
+
+function saveTheme(){
+  var theme = {
+    accent: document.getElementById('th_accent').value,
+    secondary: document.getElementById('th_secondary').value,
+    bg: document.getElementById('th_bg').value,
+    surface: document.getElementById('th_surface').value,
+    text: document.getElementById('th_text').value
+  };
+  fetch('/console.php?action=admin_theme_save&pass=' + encodeURIComponent(PASS), {
+    method: 'POST', body: JSON.stringify({theme: theme}),
+    headers: {'Content-Type': 'application/json'}
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.ok) toast('Theme saved! It will apply site-wide.');
+    else toast('Save failed', 'error');
+  })
+  .catch(function(){ toast('Network error', 'error'); });
+}
+
+function resetTheme(){
+  document.getElementById('th_accent').value = '#39d353';
+  document.getElementById('th_secondary').value = '#ffb000';
+  document.getElementById('th_bg').value = '#0d1117';
+  document.getElementById('th_surface').value = '#161b22';
+  document.getElementById('th_text').value = '#e6edf3';
+  previewTheme();
+  toast('Theme reset — click "Save Theme" to persist');
+}
+
+function toggleLight(){
+  document.documentElement.classList.toggle('light');
+}
+
+// ============================================================
+//  UPLOADS
+// ============================================================
+function doUpload(){
+  var fileInput = document.getElementById('uploadFileInput');
+  var passInput = document.getElementById('uploadPassInput');
+  var progress = document.getElementById('uploadProgress');
+  if(!fileInput.files || !fileInput.files[0]){ toast('Select a file first', 'error'); return; }
+  var file = fileInput.files[0];
+  var form = new FormData();
+  form.append('file', file);
+  form.append('pass', passInput.value || PASS);
+  progress.textContent = 'Uploading ' + file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)...';
+  fetch('/upload.php', {method: 'POST', body: form})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){
+        progress.textContent = '✅ Uploaded: ' + file.name;
+        toast('Upload complete!');
+      } else {
+        progress.textContent = '❌ ' + (d.msg||'Upload failed');
+        toast(d.msg||'Upload failed', 'error');
+      }
+    })
+    .catch(function(){
+      progress.textContent = '❌ Network error';
+      toast('Network error', 'error');
+    });
+}
+
+</script>
+</body>
+</html>

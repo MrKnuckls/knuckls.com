@@ -286,9 +286,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     <div class="hero-tagline" id="typing-line">
       <span id="typing-text"></span><span class="cursor"></span>
     </div>
-    <p class="hero-desc">
-      I play hard, I host harder, and I keep the lights on in the home lab so the squad never drops.
-    </p>
+    <p class="hero-desc" id="heroDesc"></p>
     <div class="hero-cta">
       <a href="#servers" class="btn btn-primary">&#9654; Servers</a>
       <a href="#connect" class="btn btn-outline">Join Discord</a>
@@ -307,12 +305,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     <div class="section-label">/// about</div>
     <h2 class="section-title">Who I am</h2>
     <div class="about-grid">
-      <div class="about-text">
-        <p>What's good — I'm <strong>Shaun (MrKnuckls)</strong>, a PC gamer based in <strong>Dayton, Ohio</strong>. I spend my time deep in Arma Reforger, StarRupture, PalWorld, DayZ, and Hytale — and when I'm not playing, I'm hosting the servers we actually play on.</p>
-        <p>Everything runs out of my home lab, which is half battle-station, half science project. Proxmox, Docker, pfSense — the rack that keeps the servers online and the status feed green.</p>
-        <p>I'm also building <strong>SanRoque</strong>, a co-op open-world game in Unreal Engine 5. It's early days, but the vision is clear: a living world where you and your squad write the story.</p>
-        <p>This site is where you find my servers, what I'm into right now, and what's humming in the rack.</p>
-      </div>
+      <div class="about-text" id="aboutText"></div>
       <div class="about-stats">
         <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Active Games</div></div>
         <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Hosted Servers</div></div>
@@ -813,7 +806,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 <footer>
   <div class="footer-inner">
     <img src="assets/img/knuckls-K-hero.png" alt="K" class="footer-logo">
-    <div class="footer-tagline">Gamer. Server host. Lab rat.</div>
+    <div class="footer-tagline" id="footerTagline"></div>
     <div class="footer-links">
       <a href="#hero">Home</a>
       <a href="#about">About</a>
@@ -829,7 +822,58 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 </footer>
 
 <script>
-// Theme toggle
+// ─── Dynamic content loader ─────────────────────────
+(function(){
+  function g(id){ return document.getElementById(id); }
+  // Load site config
+  fetch('/console.php?action=admin_pages_read&pass=knuckls2026')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var p = d.pages || {};
+      // Hero
+      var pp = p.hero_desc;
+      if(pp && g('heroDesc')) g('heroDesc').textContent = pp;
+      // About — convert \n to paragraphs
+      var ab = p.about_text;
+      if(ab && g('aboutText')){
+        g('aboutText').innerHTML = ab.split('\n').filter(function(l){ return l.trim(); }).map(function(l){ return '<p>' + l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>'; }).join('');
+      }
+      // Footer
+      var ft = p.footer_text;
+      if(ft && g('footerTagline')) g('footerTagline').textContent = ft;
+      // Meta description
+      var md = p.hero_desc;
+      if(md) document.querySelector('meta[name="description"]').content = 'Shaun (MrKnuckls) — ' + md;
+    });
+  // Load server config
+  fetch('/console.php?action=admin_servers_read&pass=knuckls2026')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var list = d.servers || [];
+      list.forEach(function(s){
+        var card = document.querySelector('[data-server="' + s.id + '"]');
+        if(card && s.desc){
+          var p = card.querySelector('.server-players');
+          if(p) p.textContent = s.desc;
+        }
+        if(card && s.name){
+          var n = card.querySelector('.server-name');
+          if(n) n.textContent = s.name;
+        }
+      });
+        // Load theme
+        fetch('/console.php?action=admin_theme_read&pass=knuckls2026')
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            var t = d.theme || {};
+            if(t.accent) document.documentElement.style.setProperty('--accent', t.accent);
+            if(t.bg) document.documentElement.style.setProperty('--bg', t.bg);
+            if(t.surface) document.documentElement.style.setProperty('--surface', t.surface);
+            if(t.text) document.documentElement.style.setProperty('--text', t.text);
+          });
+      })();
+
+      // Theme toggle
 (function(){
   const html = document.documentElement;
   const btn = document.getElementById('themeToggle');

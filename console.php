@@ -177,5 +177,102 @@ if ($action === 'command') {
     exit;
 }
 
+// ─── ADMIN: Pages ──────────────────────────────────
+if ($action === 'admin_pages_read') {
+    $file = __DIR__ . '/site-config.json';
+    if (file_exists($file)) {
+        echo file_get_contents($file);
+    } else {
+        echo json_encode(['pages' => [
+            'hero_tagline' => "Gamer. Server host. Lab rat.",
+            'hero_desc' => "Shaun (aka MrKnuckls) — running game servers, building projects, and home-labbin' it in Dayton, OH.",
+            'about_text' => "I'm a gamer, server admin, and hobbyist developer based in Dayton, Ohio. I run game servers for PalWorld, StarRupture, Arma Reforger, DayZ, and Hytale. When I'm not keeping servers alive, I'm working on projects like Knuckls OS, the SanRoque game in Unity 6, or tinkering with my home lab.",
+            'footer_text' => "Built with ☕ and ❤️ by Shaun (MrKnuckls). Powered by Hermes Agent.",
+        ]]);
+    }
+    exit;
+}
+if ($action === 'admin_pages_save') {
+    $body = json_decode(file_get_contents('php://input'), true);
+    file_put_contents(__DIR__ . '/site-config.json', json_encode($body, JSON_PRETTY_PRINT));
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
+// ─── ADMIN: Servers ─────────────────────────────────
+if ($action === 'admin_servers_read') {
+    $file = __DIR__ . '/servers-config.json';
+    if (file_exists($file)) {
+        echo file_get_contents($file);
+    } else {
+        $defaults = [
+            ['id'=>'palworld','name'=>'Knuckls Palworld','game'=>'PalWorld','desc'=>'😮 Casual/co-op | Max Pals enabled | Friendly base building'],
+            ['id'=>'starrupture','name'=>'Knuckls_StarRupture','game'=>'StarRupture','desc'=>'🌟 Extraction survival | PvPvE | Sci-fi frontier'],
+            ['id'=>'arma','name'=>'Knuckls Arma Reforger Server','game'=>'Arma Reforger','desc'=>'⚔️ Realism milsim | Modded | Tactical operations'],
+            ['id'=>'dayz','name'=>'Knuckls DayZ Server','game'=>'DayZ','desc'=>'🧟 Survival | PvPvE | Chernarus+'],
+            ['id'=>'hytale','name'=>'Knuckls Hytale Server','game'=>'Hytale','desc'=>'🏰 Adventure | Early access | Community builds'],
+        ];
+        echo json_encode(['servers' => $defaults]);
+    }
+    exit;
+}
+if ($action === 'admin_servers_save') {
+    $body = json_decode(file_get_contents('php://input'), true);
+    file_put_contents(__DIR__ . '/servers-config.json', json_encode($body, JSON_PRETTY_PRINT));
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
+// ─── ADMIN: Assets ──────────────────────────────────
+if ($action === 'admin_assets_read') {
+    $file = __DIR__ . '/assets.json';
+    $data = file_exists($file) ? file_get_contents($file) : '[]';
+    echo json_encode(['assets' => json_decode($data, true) ?: []]);
+    exit;
+}
+if ($action === 'admin_assets_save') {
+    $body = json_decode(file_get_contents('php://input'), true);
+    file_put_contents(__DIR__ . '/assets.json', json_encode($body['assets'] ?? [], JSON_PRETTY_PRINT));
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
+// ─── ADMIN: Blog ────────────────────────────────────
+if ($action === 'admin_blog_read') {
+    $file = __DIR__ . '/blog-posts.json';
+    $data = file_exists($file) ? file_get_contents($file) : '[]';
+    echo json_encode(['posts' => json_decode($data, true) ?: []]);
+    exit;
+}
+if ($action === 'admin_blog_save') {
+    $body = json_decode(file_get_contents('php://input'), true);
+    file_put_contents(__DIR__ . '/blog-posts.json', json_encode($body['posts'] ?? [], JSON_PRETTY_PRINT));
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
+// ─── ADMIN: Theme ───────────────────────────────────
+if ($action === 'admin_theme_read') {
+    $file = __DIR__ . '/theme.json';
+    if (file_exists($file)) {
+        echo file_get_contents($file);
+    } else {
+        echo json_encode(['theme' => [
+            'accent' => '#39d353',
+            'secondary' => '#ffb000',
+            'bg' => '#0d1117',
+            'surface' => '#161b22',
+            'text' => '#e6edf3',
+        ]]);
+    }
+    exit;
+}
+if ($action === 'admin_theme_save') {
+    $body = json_decode(file_get_contents('php://input'), true);
+    file_put_contents(__DIR__ . '/theme.json', json_encode($body, JSON_PRETTY_PRINT));
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
 // Fallback
 echo json_encode(['error' => 'unknown action']);
