@@ -1705,29 +1705,12 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
 
   loadAssets();
 
-  // Nav wiring
-  document.querySelector('a[href="#assets"]')?.addEventListener('click', function(e){
-    e.preventDefault();
-    section.style.display = 'block';
-    document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = 'none'; });
+  document.querySelector('a[href="#assets"]')?.addEventListener('click', function(){
     document.getElementById('navLinks').classList.remove('open');
-    window.scrollTo(0, 0);
+    setTimeout(function(){
+      document.getElementById('uploadZone').style.display = 'block';
+    }, 50);
   });
-
-  window.addEventListener('hashchange', ()=>{
-    if(window.location.hash === '#assets'){
-      section.style.display = 'block';
-      document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = 'none'; });
-    } else if(window.location.hash){
-      section.style.display = 'none';
-      document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = ''; });
-    }
-  });
-
-  if(window.location.hash === '#assets'){
-    section.style.display = 'block';
-    document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = 'none'; });
-  }
 
   // ─── UPLOADER ───────────────────────────────────────
   const uploadZone = document.getElementById('uploadZone');
@@ -1743,7 +1726,7 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
   var PASS_VALUE = '';
 
   function showUploadZone(){ uploadZone.style.display = 'block'; }
-  document.querySelector('a[href=\"#assets\"]')?.addEventListener('click', setTimeout.bind(null, showUploadZone, 50));
+  document.querySelector('a[href="#assets"]')?.addEventListener('click', setTimeout.bind(null, showUploadZone, 50));
   showUploadZone();
 
   uploadUnlock.addEventListener('click', function(){
