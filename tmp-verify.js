@@ -48,9 +48,10 @@
             if(t.surface) document.documentElement.style.setProperty('--surface', t.surface);
             if(t.text) document.documentElement.style.setProperty('--text', t.text);
           });
+      });
       })();
 
-      // Theme toggle
+            // Theme toggle
 (function(){
   const html = document.documentElement;
   const btn = document.getElementById('themeToggle');
@@ -621,7 +622,7 @@ window.doConsoleUnlock = async function(){
 })();
 
 // ─── ASSETS / DOWNLOADS ───────────────────────────
-(function(){
+;(function(){
   var grid = document.getElementById('assetsGrid');
   var uploadZone = document.getElementById('uploadZone');
 

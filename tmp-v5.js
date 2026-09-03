@@ -48,9 +48,10 @@
             if(t.surface) document.documentElement.style.setProperty('--surface', t.surface);
             if(t.text) document.documentElement.style.setProperty('--text', t.text);
           });
+      });
       })();
 
-      // Theme toggle
+            // Theme toggle
 (function(){
   const html = document.documentElement;
   const btn = document.getElementById('themeToggle');
@@ -255,7 +256,7 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
 
 // ─── COMMAND CENTER ───────────────────────────────
 // Global auth function — called by inline onclick/onkeydown
-window.doConsoleUnlock = async function(){
+window.knucklsAuth7193 = async function(){
   var inp = document.getElementById('consolePass');
   var gate = document.getElementById('consoleGate');
   var dash = document.getElementById('consoleDash');
@@ -269,7 +270,7 @@ window.doConsoleUnlock = async function(){
       if(gate) gate.style.display = 'none';
       if(dash) dash.style.display = 'block';
       sessionStorage.setItem('knuckls_auth', '1');
-      window.dispatchEvent(new Event('console-authed'));
+      window.dispatchEvent(new Event('knucklsAuthed'));
     } else {
       if(fail){ fail.style.display = 'block'; fail.textContent = 'Wrong passkey'; }
     }
@@ -286,7 +287,7 @@ window.doConsoleUnlock = async function(){
     if(sessionStorage.getItem('knuckls_auth')){
       if(g('consoleGate')) g('consoleGate').style.display = 'none';
       if(g('consoleDash')) g('consoleDash').style.display = 'block';
-      window.dispatchEvent(new Event('console-authed'));
+      window.dispatchEvent(new Event('knucklsAuthed'));
     }
       var timer = null;
     var ws = null;
@@ -295,7 +296,7 @@ window.doConsoleUnlock = async function(){
       var PASS = 'knuckls2026';
   
       // Listen for global auth event
-      window.addEventListener('console-authed', function(){
+      window.addEventListener('knucklsAuthed', function(){
         authed = true;
         fetchStatus();
         if(typeof timer !== 'undefined' && timer) clearInterval(timer);
@@ -621,7 +622,7 @@ window.doConsoleUnlock = async function(){
 })();
 
 // ─── ASSETS / DOWNLOADS ───────────────────────────
-(function(){
+;(function(){
   var grid = document.getElementById('assetsGrid');
   var uploadZone = document.getElementById('uploadZone');
 

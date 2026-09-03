@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- knuckls.com v3 -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta name="version" content="1788418729">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>KNUCKLS — Gamer. Server host. Lab rat.</title>
@@ -603,9 +604,9 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:24px">This dashboard is for server admins only.</p>
       <div style="display:flex;gap:8px;justify-content:center">
         <input type="password" id="consolePass" placeholder="Passkey" 
-                  onkeydown="if(event.key==='Enter') doConsoleUnlock()"
+                  onkeydown="if(event.key==='Enter') knucklsV8729()"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--font-mono);font-size:.9rem;width:200px;outline:none">
-        <button class="btn btn-primary" id="consoleUnlock" onclick="doConsoleUnlock()" style="padding:10px 20px;font-size:.85rem">Unlock</button>
+        <button class="btn btn-primary" id="consoleBtn" onclick="knucklsV8729()" style="padding:10px 20px;font-size:.85rem">Unlock</button>
       </div>
       <p id="consoleFail" style="color:var(--red);font-size:.8rem;margin-top:12px;display:none">Wrong passkey</p>
     </div>
@@ -1083,7 +1084,7 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
 
 // ─── COMMAND CENTER ───────────────────────────────
 // Global auth function — called by inline onclick/onkeydown
-window.doConsoleUnlock = async function(){
+window.knucklsV8729 = async function(){
   var inp = document.getElementById('consolePass');
   var gate = document.getElementById('consoleGate');
   var dash = document.getElementById('consoleDash');
@@ -1096,8 +1097,8 @@ window.doConsoleUnlock = async function(){
     if(d && d.authed){
       if(gate) gate.style.display = 'none';
       if(dash) dash.style.display = 'block';
-      sessionStorage.setItem('knuckls_auth', '1');
-      window.dispatchEvent(new Event('console-authed'));
+      sessionStorage.setItem('ka8729', '1');
+      window.dispatchEvent(new Event('ka8729'));
     } else {
       if(fail){ fail.style.display = 'block'; fail.textContent = 'Wrong passkey'; }
     }
@@ -1111,10 +1112,10 @@ window.doConsoleUnlock = async function(){
   var gate = g('consoleGate'), dash = g('consoleDash'), inp = g('consolePass'), fail = g('consoleFail');
   var authed = false;
     // Auto-auth if already logged in
-    if(sessionStorage.getItem('knuckls_auth')){
+    if(sessionStorage.getItem('ka8729')){
       if(g('consoleGate')) g('consoleGate').style.display = 'none';
       if(g('consoleDash')) g('consoleDash').style.display = 'block';
-      window.dispatchEvent(new Event('console-authed'));
+      window.dispatchEvent(new Event('ka8729'));
     }
       var timer = null;
     var ws = null;
@@ -1123,7 +1124,7 @@ window.doConsoleUnlock = async function(){
       var PASS = 'knuckls2026';
   
       // Listen for global auth event
-      window.addEventListener('console-authed', function(){
+      window.addEventListener('ka8729', function(){
         authed = true;
         fetchStatus();
         if(typeof timer !== 'undefined' && timer) clearInterval(timer);
@@ -1449,7 +1450,7 @@ window.doConsoleUnlock = async function(){
 })();
 
 // ─── ASSETS / DOWNLOADS ───────────────────────────
-(function(){
+;(function(){
   var grid = document.getElementById('assetsGrid');
   var uploadZone = document.getElementById('uploadZone');
 
