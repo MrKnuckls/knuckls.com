@@ -1,0 +1,204 @@
+{
+  "games": [
+    {
+      "id": "arma",
+      "title": "Arma Reforger",
+      "icon": "🪖",
+      "tagline": "Cold War combined arms — large-scale infantry, armor, and heli ops.",
+      "heroGradient": "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+      "heroAccent": "#4fc3f7",
+      "screenshots": [
+        {"url": "assets/img/games/arma-1.jpg", "thumb": "assets/img/games/arma-1.jpg", "alt": "Arma Reforger gameplay screenshot 1"},
+        {"url": "assets/img/games/arma-2.jpg", "thumb": "assets/img/games/arma-2.jpg", "alt": "Arma Reforger gameplay screenshot 2"},
+        {"url": "assets/img/games/arma-3.jpg", "thumb": "assets/img/games/arma-3.jpg", "alt": "Arma Reforger gameplay screenshot 3"},
+        {"url": "assets/img/games/arma-4.jpg", "thumb": "assets/img/games/arma-4.jpg", "alt": "Arma Reforger gameplay screenshot 4"}
+      ],
+      "description": "Arma Reforger is the next generation of the Arma series, built on the Enfusion engine. Set during the Cold War era, it delivers large-scale combined arms warfare with infantry, armor, helicopters, and more. The Knuckls server runs modded scenarios with persistent PvP campaigns — drop in for coordinated ops or casual play.",
+      "features": [
+        "Large-scale combined arms battles (infantry, armor, heli)",
+        "Modded scenarios with custom mission scripts",
+        "Persistent PvP campaigns with territory control",
+        "Enfusion engine — improved physics and destruction",
+        "Cross-platform with Workbench modding tools",
+        "Dedicated 64-player server hosted on Knuckls hardware"
+      ],
+      "developer": "Bohemia Interactive",
+      "publisher": "Bohemia Interactive",
+      "releaseDate": "May 17, 2022",
+      "genre": "MilSim, Tactical Shooter, Combined Arms",
+      "tags": ["MilSim", "Combined Arms", "Tactical", "Multiplayer", "Cold War"],
+      "serverId": "arma",
+      "serverAddress": "knucklsgames.com:2001",
+      "players": "64",
+      "discordRole": "Arma Reforger",
+      "systemRequirements": {
+        "os": "Windows 10 64-bit",
+        "cpu": "Intel Core i5-6600K / AMD Ryzen 5 2600",
+        "ram": "16 GB",
+        "gpu": "NVIDIA GeForce GTX 1070 / AMD Radeon RX 580",
+        "storage": "30 GB",
+        "directx": "Version 12"
+      }
+    },
+    {
+      "id": "starrupture",
+      "title": "StarRupture",
+      "icon": "🌟",
+      "tagline": "Open-world extraction survival in a hostile sci-fi frontier.",
+      "heroGradient": "linear-gradient(135deg, #0d0221 0%, #1a0533 50%, #2d0a5e 100%)",
+      "heroAccent": "#b388ff",
+      "screenshots": [
+        {"url": "assets/img/games/starrupture-1.jpg", "thumb": "assets/img/games/starrupture-1.jpg", "alt": "StarRupture gameplay screenshot 1"},
+        {"url": "assets/img/games/starrupture-2.jpg", "thumb": "assets/img/games/starrupture-2.jpg", "alt": "StarRupture gameplay screenshot 2"},
+        {"url": "assets/img/games/starrupture-3.jpg", "thumb": "assets/img/games/starrupture-3.jpg", "alt": "StarRupture gameplay screenshot 3"},
+        {"url": "assets/img/games/starrupture-4.jpg", "thumb": "assets/img/games/starrupture-4.jpg", "alt": "StarRupture gameplay screenshot 4"}
+      ],
+      "description": "StarRupture is an open-world extraction survival game set on a hostile alien planet. Explore vast biomes, build bases, fight AI creatures and rival players, and extract with valuable loot. Every expedition is a gamble — gear up, go in, and try to make it out alive on the Knuckls server.",
+      "features": [
+        "Open-world extraction survival gameplay loop",
+        "Procedural POIs with dynamic loot tables",
+        "Base building with full structural integrity",
+        "AI creatures with territorial behavior",
+        "PvPvE — fight players and the environment",
+        "Dedicated server hosted on Knuckls hardware"
+      ],
+      "developer": "Rupture Studios",
+      "publisher": "Rupture Studios",
+      "releaseDate": "December 12, 2023",
+      "genre": "Extraction Survival, Open World, PvPvE",
+      "tags": ["Extraction", "Sci-Fi", "Survival", "PvPvE", "Open World"],
+      "serverId": "starrupture",
+      "serverAddress": "knucklsgames.com:7777",
+      "players": "32",
+      "discordRole": "StarRupture",
+      "systemRequirements": {
+        "os": "Windows 10 64-bit",
+        "cpu": "Intel Core i7-8700 / AMD Ryzen 5 3600",
+        "ram": "16 GB",
+        "gpu": "NVIDIA GeForce RTX 2060 / AMD Radeon RX 5600 XT",
+        "storage": "40 GB",
+        "directx": "Version 12"
+      }
+    },
+    {
+      "id": "palworld",
+      "title": "PalWorld",
+      "icon": "😮",
+      "tagline": "Build a base, catch Pals, automate production — survival crafting with creature collecting.",
+      "heroGradient": "linear-gradient(135deg, #1a3a1a 0%, #2d5a2d 50%, #1a4a2a 100%)",
+      "heroAccent": "#66bb6a",
+      "screenshots": [
+        {"url": "assets/img/games/palworld-1.jpg", "thumb": "assets/img/games/palworld-1.jpg", "alt": "PalWorld gameplay screenshot 1"},
+        {"url": "assets/img/games/palworld-2.jpg", "thumb": "assets/img/games/palworld-2.jpg", "alt": "PalWorld gameplay screenshot 2"},
+        {"url": "assets/img/games/palworld-3.jpg", "thumb": "assets/img/games/palworld-3.jpg", "alt": "PalWorld gameplay screenshot 3"},
+        {"url": "assets/img/games/palworld-4.jpg", "thumb": "assets/img/games/palworld-4.jpg", "alt": "PalWorld gameplay screenshot 4"}
+      ],
+      "description": "PalWorld is an open-world survival crafting game where you collect and train mysterious creatures called Pals. Build automated bases, explore vast islands, battle bosses, and conquer dungeons. The Knuckls server runs with max Pal settings, friendly base building, and a casual co-op focus — Pals do the work, you do the exploring.",
+      "features": [
+        "Creature collecting with unique Pal abilities",
+        "Base automation — Pals work, craft, and fight",
+        "Open-world exploration with flying mounts",
+        "Boss dungeons and tower challenges",
+        "Multiplayer co-op on the Knuckls server",
+        "Max Pal settings enabled for faster progression"
+      ],
+      "developer": "Pocketpair",
+      "publisher": "Pocketpair",
+      "releaseDate": "January 19, 2024",
+      "genre": "Survival, Creature Collecting, Base Building",
+      "tags": ["Survival", "Creature Collecting", "Base Building", "Co-op"],
+      "serverId": "palworld",
+      "serverAddress": "knucklsgames.com:8214",
+      "players": "16",
+      "discordRole": "PalWorld",
+      "systemRequirements": {
+        "os": "Windows 10 64-bit",
+        "cpu": "Intel Core i5-3570K / AMD Ryzen 3 3300X",
+        "ram": "16 GB",
+        "gpu": "NVIDIA GeForce GTX 1050 / AMD Radeon RX 560",
+        "storage": "40 GB",
+        "directx": "Version 11"
+      }
+    },
+    {
+      "id": "dayz",
+      "title": "DayZ",
+      "icon": "🧟",
+      "tagline": "Spawn naked, survive zombies, get betrayed by friends — the most punishing survival game.",
+      "heroGradient": "linear-gradient(135deg, #1a0a0a 0%, #2d1515 50%, #3a1a1a 100%)",
+      "heroAccent": "#ef5350",
+      "screenshots": [
+        {"url": "assets/img/games/dayz-1.jpg", "thumb": "assets/img/games/dayz-1.jpg", "alt": "DayZ gameplay screenshot 1"},
+        {"url": "assets/img/games/dayz-2.jpg", "thumb": "assets/img/games/dayz-2.jpg", "alt": "DayZ gameplay screenshot 2"},
+        {"url": "assets/img/games/dayz-3.jpg", "thumb": "assets/img/games/dayz-3.jpg", "alt": "DayZ gameplay screenshot 3"},
+        {"url": "assets/img/games/dayz-4.jpg", "thumb": "assets/img/games/dayz-4.jpg", "alt": "DayZ gameplay screenshot 4"}
+      ],
+      "description": "DayZ is the hardcore survival game where the story is the prize. Spawn on the coast of Chernarus with nothing but your wits — find food, water, and weapons, fight infected, and navigate a world where every other survivor could be your next friend or your last enemy. The Knuckls server features modded loot, a party system, and a tight-knit community.",
+      "features": [
+        "Hardcore survival with hunger, thirst, temperature, and health",
+        "Modded loot economy with enhanced spawns",
+        "Party system for team play",
+        "Custom-built community zones",
+        "PvPvE — infected and players are both threats",
+        "Dedicated server hosted on Knuckls hardware"
+      ],
+      "developer": "Bohemia Interactive",
+      "publisher": "Bohemia Interactive",
+      "releaseDate": "December 13, 2018",
+      "genre": "Survival, Open World, PvPvE",
+      "tags": ["Survival", "PvP", "Zombies", "Open World", "Hardcore"],
+      "serverId": "dayz",
+      "serverAddress": "knucklsgames.com:2302",
+      "players": "60",
+      "discordRole": "DayZ",
+      "systemRequirements": {
+        "os": "Windows 10 64-bit",
+        "cpu": "Intel Core i5-4430 / AMD FX-6300",
+        "ram": "12 GB",
+        "gpu": "NVIDIA GeForce GTX 760 / AMD Radeon R9 270X",
+        "storage": "25 GB",
+        "directx": "Version 11"
+      }
+    },
+    {
+      "id": "hytale",
+      "title": "Hytale",
+      "icon": "🏔️",
+      "tagline": "Sandbox adventure with a deep modding engine — building worlds, not just playing them.",
+      "heroGradient": "linear-gradient(135deg, #1a2a3a 0%, #2a4a6a 50%, #1a3a5a 100%)",
+      "heroAccent": "#42a5f5",
+      "screenshots": [
+        {"url": "assets/img/games/hytale-1.jpg", "thumb": "assets/img/games/hytale-1.jpg", "alt": "Hytale gameplay screenshot 1"},
+        {"url": "assets/img/games/hytale-2.jpg", "thumb": "assets/img/games/hytale-2.jpg", "alt": "Hytale gameplay screenshot 2"},
+        {"url": "assets/img/games/hytale-3.jpg", "thumb": "assets/img/games/hytale-3.jpg", "alt": "Hytale gameplay screenshot 3"},
+        {"url": "assets/img/games/hytale-4.jpg", "thumb": "assets/img/games/hytale-4.jpg", "alt": "Hytale gameplay screenshot 4"}
+      ],
+      "description": "Hytale is a sandbox adventure game built around a powerful modding engine. Procedurally generated worlds, deep dungeon crawling, and a combat system that rewards skill. But the real power is in the tools — Hytale's modding suite lets you create custom game modes, assets, and entire worlds. The Knuckls server is the go-to spot for early access builds and community content.",
+      "features": [
+        "Procedurally generated block worlds with biomes",
+        "Deep dungeon crawling with boss fights",
+        "Built-in modding toolkit (no external software needed)",
+        "Scriptable game logic with Hytale's scripting system",
+        "Community content marketplace",
+        "Dedicated server hosted on Knuckls hardware"
+      ],
+      "developer": "Hypixel Studios",
+      "publisher": "Hypixel Studios",
+      "releaseDate": "TBA (Early Access)",
+      "genre": "Sandbox, Adventure, Modding",
+      "tags": ["Sandbox", "Modding", "Adventure", "Procedural", "Multiplayer"],
+      "serverId": "hytale",
+      "serverAddress": "knucklsgames.com:5520",
+      "players": "32",
+      "discordRole": "Hytale",
+      "systemRequirements": {
+        "os": "Windows 10 64-bit",
+        "cpu": "Intel Core i5-8400 / AMD Ryzen 5 2600",
+        "ram": "16 GB",
+        "gpu": "NVIDIA GeForce GTX 1060 / AMD Radeon RX 580",
+        "storage": "20 GB",
+        "directx": "Version 11"
+      }
+    }
+  ]
+}

@@ -203,7 +203,7 @@
 ;(async function(){
   const list = document.getElementById('blogList');
   try{
-    const resp = await fetch('/blog.json');
+    const resp = await fetch('/blog-posts.json');
     const posts = await resp.json();
     if(!posts || posts.length === 0){
       list.innerHTML = '<div class="blog-empty">No dev notes yet. First update coming soon.</div>';
@@ -702,4 +702,177 @@ window.consoleAuthFn = async function(){
   }
 
   loadAssets();
+})();
+
+// ─── GAME DETAIL OVERLAY ───────────────────────────
+;(function(){
+  var overlay = document.getElementById('gameOverlay');
+  var heroGrad = document.getElementById('gameHeroGradient');
+  var heroIcon = document.getElementById('gameHeroIcon');
+  var heroTitle = document.getElementById('gameHeroTitle');
+  var heroTagline = document.getElementById('gameHeroTagline');
+  var ssMain = document.getElementById('gameScreenshotMain');
+  var thumbs = document.getElementById('gameThumbnails');
+  var desc = document.getElementById('gameDescription');
+  var features = document.getElementById('gameFeatures');
+  var dev = document.getElementById('gameDev');
+  var pub = document.getElementById('gamePub');
+  var release = document.getElementById('gameRelease');
+  var genre = document.getElementById('gameGenre');
+  var players = document.getElementById('gamePlayers');
+  var tags = document.getElementById('gameTags');
+  var sysReqs = document.getElementById('gameSysReqsList');
+  var serverStatus = document.getElementById('gameServerStatus');
+  var serverStatusText = document.getElementById('gameServerStatusText');
+  var serverAddr = document.getElementById('gameServerAddr');
+  var serverBtn = document.getElementById('gameServerBtn');
+
+  window.closeGameOverlay = function(){
+    if(overlay) overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  function openGameDetail(gameId){
+    if(!overlay) return;
+    // Fetch game data
+    fetch('/games-detail.json')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var game = null;
+        for(var i=0; i<data.games.length; i++){
+          if(data.games[i].id === gameId){ game = data.games[i]; break; }
+        }
+        if(!game) return;
+
+        // Hero
+        if(heroGrad) heroGrad.style.background = game.heroGradient;
+        if(heroIcon) heroIcon.textContent = game.icon;
+        if(heroTitle) heroTitle.textContent = game.title;
+        if(heroTagline) heroTagline.textContent = game.tagline;
+
+        // Screenshots
+        var shots = game.screenshots || [];
+        if(ssMain){
+          if(shots.length > 0 && shots[0].url){
+            ssMain.src = shots[0].url;
+            ssMain.alt = shots[0].alt || '';
+          } else {
+            ssMain.style.display = 'none';
+          }
+        }
+        if(thumbs){
+          thumbs.innerHTML = shots.map(function(s, idx){
+            var cls = idx === 0 ? 'thumb active' : 'thumb';
+            var img = document.createElement('img');
+            var html = '<img class="'+cls+'" src="'+(s.thumb||s.url)+'" alt="'+(s.alt||'')+'" data-idx="'+idx+'" onclick="selectGameScreenshot('+idx+')">';
+            return html;
+          }).join('');
+        }
+
+        // Description
+        if(desc) desc.textContent = game.description;
+
+        // Features
+        if(features){
+          features.innerHTML = (game.features||[]).map(function(f){
+            return '<li>'+f+'</li>';
+          }).join('');
+        }
+
+        // Metadata
+        if(dev) dev.textContent = game.developer || '—';
+        if(pub) pub.textContent = game.publisher || '—';
+        if(release) release.textContent = game.releaseDate || '—';
+        if(genre) genre.textContent = game.genre || '—';
+        if(players) players.textContent = game.players || '—';
+
+        // Tags
+        if(tags){
+          tags.innerHTML = (game.tags||[]).map(function(t){
+            return '<span>'+t+'</span>';
+          }).join('');
+        }
+
+        // System Requirements
+        if(sysReqs){
+          var reqs = game.systemRequirements || {};
+          var fields = [
+            ['OS', reqs.os],
+            ['CPU', reqs.cpu],
+            ['RAM', reqs.ram],
+            ['GPU', reqs.gpu],
+            ['Storage', reqs.storage],
+            ['DirectX', reqs.directx]
+          ];
+          sysReqs.innerHTML = fields.filter(function(f){ return f[1]; }).map(function(f){
+            return '<div class="reqRow"><span class="reqLabel">'+f[0]+'</span><span class="reqVal">'+f[1]+'</span></div>';
+          }).join('');
+        }
+
+        // Server status (fetch live from console.php)
+        if(serverStatus){
+          serverStatus.innerHTML = '<span class="dot checking"></span>';
+          if(serverStatusText) serverStatusText.textContent = 'CHECKING';
+        }
+        if(serverAddr) serverAddr.textContent = game.serverAddress || '';
+        if(serverBtn){
+          serverBtn.href = '#';
+          serverBtn.onclick = function(e){ e.preventDefault(); window.location.href = '#servers'; };
+        }
+
+        // Fetch live server status
+        (function(){
+          var sid = game.serverId;
+          if(!sid) return;
+          var x = new XMLHttpRequest();
+          x.open('GET', '/console.php?action=status&pass=knuckls2026&v=' + Date.now());
+          x.onload = function(){
+            try {
+              var d = JSON.parse(x.responseText);
+              var svr = null;
+              if(d && d.servers){
+                for(var i=0; i<d.servers.length; i++){
+                  if(d.servers[i].id === sid){ svr = d.servers[i]; break; }
+                }
+              }
+              if(svr && serverStatus && serverStatusText){
+                var isOnline = svr.online;
+                serverStatus.innerHTML = '<span class="dot ' + (isOnline ? 'online' : 'offline') + '"></span>';
+                serverStatusText.textContent = isOnline ? 'ONLINE' : 'OFFLINE';
+                serverStatusText.style.color = isOnline ? 'var(--accent)' : 'var(--red)';
+              }
+            } catch(e){}
+          };
+          x.send();
+        })();
+
+        // Show overlay
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      })
+      .catch(function(e){ console.log('Game detail load error:', e); });
+  }
+
+  window.selectGameScreenshot = function(idx){
+    // Read from the hidden cached data via DOM
+    var imgs = thumbs ? thumbs.querySelectorAll('.thumb') : [];
+    for(var i=0; i<imgs.length; i++){
+      imgs[i].classList.toggle('active', i === idx);
+      if(i === idx && ssMain){
+        ssMain.src = imgs[i].src;
+        ssMain.alt = imgs[i].alt;
+      }
+    }
+  };
+
+  // Click handlers on game cards
+  var cards = document.querySelectorAll('.game-card[data-game]');
+  for(var i=0; i<cards.length; i++){
+    cards[i].addEventListener('click', function(e){
+      // Don't open if clicking a link inside the card
+      if(e.target.tagName === 'A') return;
+      var id = this.getAttribute('data-game');
+      if(id) openGameDetail(id);
+    });
+  }
 })();

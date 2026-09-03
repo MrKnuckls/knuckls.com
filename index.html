@@ -327,35 +327,35 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     <h2 class="section-title">What I'm playing now</h2>
     <p class="section-sub">Five games own most of my time. Every one has a server I host or play on.</p>
     <div class="games-grid">
-      <div class="game-card">
+      <div class="game-card" data-game="arma" style="cursor:pointer">
         <div class="game-icon">🪖</div>
         <h3>Arma Reforger</h3>
         <p>Cold War combined arms — large-scale infantry, armor, and heli ops. Modded scenarios and persistent PvP campaigns on the Knuckls server.</p>
         <div class="game-tags"><span>MilSim</span><span>Combined Arms</span></div>
         <a href="#servers" class="game-server-link">→ Server status</a>
       </div>
-      <div class="game-card">
+      <div class="game-card" data-game="starrupture" style="cursor:pointer">
         <div class="game-icon">🌟</div>
         <h3>StarRupture</h3>
         <p>Open-world extraction survival. Explore, build, fight AI and players in a hostile sci-fi frontier. Every run is a gamble.</p>
         <div class="game-tags"><span>Extraction</span><span>Sci-Fi</span></div>
         <a href="#servers" class="game-server-link">→ Server status</a>
       </div>
-      <div class="game-card">
+      <div class="game-card" data-game="palworld" style="cursor:pointer">
         <div class="game-icon">😮</div>
         <h3>PalWorld</h3>
         <p>Build a base, catch Pals, automate production — then send your Pals into battle. It's survival crafting with creature collecting.</p>
         <div class="game-tags"><span>Survival</span><span>Creature Collecting</span></div>
         <a href="#servers" class="game-server-link">→ Server status</a>
       </div>
-      <div class="game-card">
+      <div class="game-card" data-game="dayz" style="cursor:pointer">
         <div class="game-icon">🧟</div>
         <h3>DayZ</h3>
         <p>Spawn naked, survive zombies, get betrayed by friends, die to a broken leg. The most punishing survival game — the story is the prize.</p>
         <div class="game-tags"><span>Survival</span><span>PvP</span></div>
         <a href="#servers" class="game-server-link">→ Server status</a>
       </div>
-      <div class="game-card">
+      <div class="game-card" data-game="hytale" style="cursor:pointer">
         <div class="game-icon">🏔️</div>
         <h3>Hytale</h3>
         <p>Sandbox adventure with a deep modding engine. Procedural worlds, dungeons, and fully customizable game logic — building worlds, not just playing them.</p>
@@ -805,6 +805,61 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 #assets .asset-card .asset-preview:hover{border-color:var(--accent);transform:scale(1.02)}
 #previewLightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);cursor:zoom-out;align-items:center;justify-content:center}
 #previewLightbox img{max-width:90vw;max-height:90vh;border-radius:12px;border:2px solid var(--border)}
+/* GAME DETAIL OVERLAY */
+#gameOverlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);overflow-y:auto;padding:0}
+#gameOverlay.open{display:block}
+#gameOverlayInner{max-width:1100px;margin:40px auto;position:relative;background:var(--bg);border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 20px 80px rgba(0,0,0,.6)}
+#gameOverlayClose{position:absolute;top:16px;right:16px;z-index:10;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.5);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;backdrop-filter:blur(4px)}
+#gameOverlayClose:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4)}
+#gameHero{position:relative;height:280px;overflow:hidden}
+#gameHeroGradient{position:absolute;inset:0}
+#gameHeroContent{position:absolute;bottom:0;left:0;right:0;padding:32px;background:linear-gradient(transparent,rgba(0,0,0,.8))}
+#gameHeroIcon{font-size:3rem;margin-bottom:8px}
+#gameHeroTitle{font-family:var(--font-head);font-weight:700;font-size:2.4rem;color:#fff;margin:0;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+#gameHeroTagline{font-size:.95rem;color:rgba(255,255,255,.7);margin-top:4px;max-width:600px}
+#gameBody{display:grid;grid-template-columns:1fr 320px;gap:0;padding:0}
+#gameMain{padding:24px}
+#gameScreenshotWrap{position:relative;margin-bottom:24px}
+#gameScreenshotMain{width:100%;border-radius:8px;border:1px solid var(--border);aspect-ratio:16/9;object-fit:cover;background:var(--surface);display:block}
+#gameThumbnails{display:flex;gap:8px;margin-top:8px;overflow-x:auto;padding-bottom:4px}
+#gameThumbnails .thumb{width:80px;height:45px;border-radius:4px;border:2px solid var(--border);object-fit:cover;cursor:pointer;flex-shrink:0;transition:all .2s;background:var(--surface)}
+#gameThumbnails .thumb:hover{border-color:var(--text-muted)}
+#gameThumbnails .thumb.active{border-color:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
+#gameDescSection h2,#gameFeaturesSection h2{font-family:var(--font-head);font-weight:700;font-size:1.3rem;color:var(--text);margin:0 0 12px}
+#gameDescription{color:var(--text-muted);font-size:.95rem;line-height:1.7;margin-bottom:24px}
+#gameFeatures{list-style:none;padding:0;margin:0 0 24px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#gameFeatures li{padding:8px 12px;background:rgba(57,211,83,.04);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:.88rem;color:var(--text)}
+#gameSidebar{padding:24px;border-left:1px solid var(--border);background:rgba(0,0,0,.03)}
+.gameSidebarLabel{font-family:var(--font-mono);font-size:.65rem;color:var(--text-muted);letter-spacing:.12em;margin-bottom:8px}
+#gameServerCard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;text-align:center}
+#gameServerStatus{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;font-family:var(--font-mono);font-size:.85rem}
+#gameServerStatus .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+#gameServerStatus .dot.online{background:var(--accent);box-shadow:0 0 10px var(--accent-glow)}
+#gameServerStatus .dot.offline{background:var(--red)}
+#gameServerStatus .dot.checking{background:var(--secondary)}
+#gameServerAddr{font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted);word-break:break-all;margin-bottom:12px;background:var(--bg);padding:6px 10px;border-radius:4px;border:1px solid var(--border)}
+#gameMeta{margin-bottom:20px}
+.gameMetaRow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.82rem}
+.gameMetaRow:last-child{border-bottom:none}
+.gameMetaRow .metaLabel{color:var(--text-muted)}
+.gameMetaRow .metaVal{color:var(--text);text-align:right}
+#gameTagsSection{margin-bottom:20px}
+#gameTags{display:flex;gap:4px;flex-wrap:wrap}
+#gameTags span{font-family:var(--font-mono);font-size:.68rem;padding:3px 8px;border-radius:4px;background:rgba(57,211,53,.08);color:var(--accent);letter-spacing:.04em}
+#gameSysReqsList{font-size:.78rem;color:var(--text-muted)}
+#gameSysReqsList .reqRow{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)}
+#gameSysReqsList .reqRow:last-child{border-bottom:none}
+#gameSysReqsList .reqLabel{color:var(--text-muted)}
+#gameSysReqsList .reqVal{color:var(--text);text-align:right;max-width:55%}
+@media(max-width:768px){
+  #gameBody{grid-template-columns:1fr}
+  #gameSidebar{border-left:none;border-top:1px solid var(--border)}
+  #gameHero{height:200px}
+  #gameHeroTitle{font-size:1.6rem}
+  #gameFeatures{grid-template-columns:1fr}
+  #gameOverlayInner{margin:0;border-radius:0;min-height:100vh}
+  #gameOverlayClose{top:12px;right:12px}
+}
 </style>
 
 <!-- FOOTER -->
@@ -826,8 +881,73 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
   </div>
 </footer>
 
-<script src="app-v10.js?v=1"></script>
+<script src="app-v10.js?v=3"></script>
 <div id="previewLightbox" onclick="this.style.display='none'"><img src="" alt="Preview"></div>
+
+<!-- GAME DETAIL OVERLAY -->
+<div id="gameOverlay" onclick="if(event.target===this) closeGameOverlay()">
+  <div id="gameOverlayInner">
+    <button id="gameOverlayClose" onclick="closeGameOverlay()">✕</button>
+    <div id="gameHero">
+      <div id="gameHeroGradient"></div>
+      <div id="gameHeroContent">
+        <div id="gameHeroIcon"></div>
+        <h1 id="gameHeroTitle"></h1>
+        <p id="gameHeroTagline"></p>
+      </div>
+    </div>
+    <div id="gameBody">
+      <div id="gameMain">
+        <!-- Screenshot carousel -->
+        <div id="gameScreenshotWrap">
+          <img id="gameScreenshotMain" src="" alt="">
+          <div id="gameThumbnails"></div>
+        </div>
+        <!-- Description -->
+        <div id="gameDescSection">
+          <h2>About the game</h2>
+          <p id="gameDescription"></p>
+        </div>
+        <!-- Features -->
+        <div id="gameFeaturesSection">
+          <h2>Why I play on Knuckls</h2>
+          <ul id="gameFeatures"></ul>
+        </div>
+      </div>
+      <div id="gameSidebar">
+        <!-- Server info card -->
+        <div id="gameServerCard">
+          <div class="gameSidebarLabel">SERVER STATUS</div>
+          <div id="gameServerStatus">
+            <span class="dot checking"></span>
+            <span id="gameServerStatusText">CHECKING</span>
+          </div>
+          <div id="gameServerAddr"></div>
+          <a id="gameServerBtn" class="btn btn-primary" style="width:100%;justify-content:center;font-size:.85rem">🎮 Join Server</a>
+        </div>
+        <!-- Metadata -->
+        <div id="gameMeta">
+          <div class="gameSidebarLabel">DETAILS</div>
+          <div class="gameMetaRow"><span class="metaLabel">Developer</span><span class="metaVal" id="gameDev"></span></div>
+          <div class="gameMetaRow"><span class="metaLabel">Publisher</span><span class="metaVal" id="gamePub"></span></div>
+          <div class="gameMetaRow"><span class="metaLabel">Release</span><span class="metaVal" id="gameRelease"></span></div>
+          <div class="gameMetaRow"><span class="metaLabel">Genre</span><span class="metaVal" id="gameGenre"></span></div>
+          <div class="gameMetaRow"><span class="metaLabel">Max Players</span><span class="metaVal" id="gamePlayers"></span></div>
+        </div>
+        <!-- Tags -->
+        <div id="gameTagsSection">
+          <div class="gameSidebarLabel">TAGS</div>
+          <div id="gameTags"></div>
+        </div>
+        <!-- System Requirements -->
+        <div id="gameSysReqs">
+          <div class="gameSidebarLabel">SYSTEM REQUIREMENTS</div>
+          <div id="gameSysReqsList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
