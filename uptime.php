@@ -58,7 +58,9 @@ if (empty($filtered)) {
 $servers = [];
 $lastState = [];
 foreach ($filtered as $e) {
-    foreach ($e['servers'] as $sid => $online) {
+    foreach ($e['servers'] as $sid => $info) {
+        // Support both old format (bool) and new format ({online, cpu, ram})
+        $online = is_bool($info) ? $info : ($info['online'] ?? false);
         if ($targetServer !== 'all' && $sid !== $targetServer) continue;
         if (!isset($servers[$sid])) $servers[$sid] = [];
         if (!isset($lastState[$sid])) {

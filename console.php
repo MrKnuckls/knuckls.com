@@ -102,7 +102,11 @@ if ($action === 'status') {
     // ─── UPTIME LOGGING ─────────────────────────────
     $state = [];
     foreach ($result as $id => $s) {
-        $state[$id] = $s['online'] ?? false;
+        $state[$id] = [
+            'online' => $s['online'] ?? false,
+            'cpu'    => $s['cpu'] ?? 0,
+            'ram'    => $s['ram'] ?? 0,
+        ];
     }
     $logEntry = json_encode(['ts' => time(), 'servers' => $state]) . "\n";
     $logFile = __DIR__ . '/uptime_log.json';

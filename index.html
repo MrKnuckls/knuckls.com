@@ -642,6 +642,34 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         </div>
         <p style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);margin-top:8px;text-align:right">Green = online · Red = offline · Gray = no data</p>
       </div>
+
+      <!-- Resource History -->
+      <div id="resourcesPanel" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <h3 style="font-family:var(--font-head);font-weight:600;font-size:1.05rem;color:var(--text);margin:0">📈 Resource History</h3>
+          <div style="display:flex;gap:6px">
+            <select id="resourceServer" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:var(--font-mono);font-size:.75rem;outline:none">
+              <option value="palworld">PalWorld</option>
+              <option value="starrupture">StarRupture</option>
+              <option value="arma">Reforger</option>
+              <option value="dayz">DayZ</option>
+              <option value="hytale">Hytale</option>
+            </select>
+            <div style="display:flex;gap:4px" id="resRangeTabs">
+              <button class="btn btn-outline" data-range="24h" style="padding:3px 10px;font-size:.7rem;background:var(--accent);color:var(--bg);border-color:var(--accent)">24h</button>
+              <button class="btn btn-outline" data-range="7d" style="padding:3px 10px;font-size:.7rem">7d</button>
+            </div>
+          </div>
+        </div>
+        <div id="resChart" style="position:relative;height:180px">
+          <canvas id="resCanvas" style="width:100%;height:180px;border-radius:8px;background:rgba(0,0,0,.05)"></canvas>
+          <div id="resEmpty" class="blog-empty" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none">Loading...</div>
+        </div>
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted)">
+          <span><span style="display:inline-block;width:12px;height:3px;background:var(--accent);border-radius:2px;margin-right:4px"></span> CPU %</span>
+          <span><span style="display:inline-block;width:12px;height:3px;background:var(--secondary);border-radius:2px;margin-right:4px"></span> RAM (MB)</span>
+        </div>
+      </div>
       
       <!-- Action feedback -->
       <div id="consoleToast" style="display:none;position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:10px 20px;font-size:.85rem;z-index:999;animation:fadeIn .3s"></div>
@@ -970,6 +998,7 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
       const data = await r.json();
       renderGrid(data);
       loadUptime();
+      loadResources(document.getElementById('resourceServer')?.value || 'palworld', '24h');
       status.textContent = '● monitoring';
       last.textContent = `last: ${new Date().toLocaleTimeString()}`;
     } catch(e){
@@ -1130,6 +1159,122 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
     toast.style.display = 'block';
     setTimeout(() => { toast.style.display = 'none'; }, 3000);
   }
+
+  // ─── RESOURCE HISTORY CHART ─────────────────
+  async function loadResources(server, range){
+    const canvas = document.getElementById('resCanvas');
+    const empty = document.getElementById('resEmpty');
+    try {
+      empty.style.display = 'block';
+      empty.textContent = 'Loading...';
+      const r = await fetch(`/resources.php?server=${server}&range=${range}`, {signal:AbortSignal.timeout(8000)});
+      const data = await r.json();
+      const points = data.points || [];
+      if(points.length < 2){
+        empty.style.display = 'block';
+        empty.textContent = 'Need more data points — keep the console open.';
+        return;
+      }
+      empty.style.display = 'none';
+      
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const W = rect.width;
+      const H = 180;
+      const pad = {top: 20, bottom: 25, left: 45, right: 15};
+      canvas.width = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
+      // Compute scales
+      const cpuVals = points.map(p => p.cpu || 0);
+      const ramVals = points.map(p => p.ram || 0);
+      const maxCpu = Math.max(...cpuVals, 1);
+      const maxRam = Math.max(...ramVals, 1);
+      
+      const xScale = (W - pad.left - pad.right) / Math.max(points.length - 1, 1);
+      const cpuScale = (H - pad.top - pad.bottom) / maxCpu;
+      const ramScale = (H - pad.top - pad.bottom) / maxRam;
+      
+      // Background
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = 'rgba(0,0,0,0)';
+      ctx.fillRect(0, 0, W, H);
+      
+      // Grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,.05)';
+      ctx.lineWidth = 1;
+      for(let y = 0; y < 4; y++){
+        const yy = pad.top + (y/3) * (H - pad.top - pad.bottom);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, yy);
+        ctx.lineTo(W - pad.right, yy);
+        ctx.stroke();
+      }
+      
+      // CPU line
+      ctx.strokeStyle = '#39d335';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = pad.left + i * xScale;
+        const y = pad.top + (H - pad.top - pad.bottom) - (p.cpu || 0) * cpuScale;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      
+      // RAM line
+      ctx.strokeStyle = '#ffb000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = pad.left + i * xScale;
+        const y = pad.top + (H - pad.top - pad.bottom) - (p.ram || 0) * ramScale;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      
+      // Dots for online/offline
+      points.forEach((p, i) => {
+        if(i % Math.ceil(points.length / 20) !== 0 && i !== points.length - 1) return;
+        const x = pad.left + i * xScale;
+        const y = pad.top + (H - pad.top - pad.bottom) - (p.cpu || 0) * cpuScale;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = p.online ? '#39d335' : '#ff5555';
+        ctx.fill();
+      });
+      
+      // Y-axis labels
+      ctx.fillStyle = 'rgba(255,255,255,.4)';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'right';
+      // CPU
+      ctx.fillText('CPU ' + maxCpu.toFixed(0) + '%', pad.left - 5, pad.top + 10);
+      ctx.fillText('0%', pad.left - 5, H - pad.bottom);
+    } catch(e){
+      empty.style.display = 'block';
+      empty.textContent = 'Could not load resource history.';
+    }
+  }
+
+  // Wire resource controls
+  document.getElementById('resourceServer')?.addEventListener('change', function(){
+    loadResources(this.value, document.querySelector('#resRangeTabs button[style*=accent]')?.dataset.range || '24h');
+  });
+  document.querySelectorAll('#resRangeTabs button').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const range = this.dataset.range;
+      document.querySelectorAll('#resRangeTabs button').forEach(b => {
+        b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
+      });
+      this.style.background = 'var(--accent)'; this.style.color = 'var(--bg)'; this.style.borderColor = 'var(--accent)';
+      const server = document.getElementById('resourceServer')?.value || 'palworld';
+      loadResources(server, range);
+    });
+  });
 
   // Refresh button
   document.getElementById('consoleRefresh')?.addEventListener('click', fetchStatus);
