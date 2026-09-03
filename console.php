@@ -17,6 +17,9 @@ $API_KEY = 'ptlc_QMlMOYzopaXwKn1A9nuRuztLy2Tgy62vNlcn7atfErC';
 $PANEL  = 'https://panel.knucklsgames.com';
 $PASS   = 'knuckls2026'; // simple password, change this
 
+// Database API (via Cloudflare Tunnel) — set to '' to disable
+$DB_API = 'https://api.knucklsgames.com';
+
 // Map server IDs to UUIDs and game
 $SERVERS = [
     'palworld'    => ['uuid' => '5f6cb19c', 'game' => 'PalWorld'],
@@ -53,8 +56,41 @@ function ptl($method, $endpoint, $body = null) {
     return $decoded ?: ['ok' => true];
 }
 
+// ─── DB API HELPER ─────────────────────────────────
+function db_api($endpoint) {
+    global $DB_API, $PASS;
+    if (!$DB_API) return null;
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $DB_API . $endpoint . (strpos($endpoint, '?') === false ? '?' : '&') . 'key=' . urlencode($PASS),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 5,
+        CURLOPT_SSL_VERIFYPEER => false,
+    ]);
+    $resp = curl_exec($ch);
+    $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($http !== 200) return null;
+    $decoded = json_decode($resp, true);
+    return $decoded;
+}
+
 // ─── ACTIONS ───────────────────────────────────────
 $action = $_GET['action'] ?? '';
+
+// Public blog endpoint (no auth required)
+if ($action === 'blog') {
+    $db = db_api('/blog');
+    if ($db && is_array($db)) {
+        echo json_encode($db);
+        exit;
+    }
+    // Fallback to flat file
+    $file = __DIR__ . '/blog.json';
+    $data = file_exists($file) ? file_get_contents($file) : '[]';
+    echo $data;
+    exit;
+}
 
 // Auth check
 if ($action === 'auth') {
@@ -179,6 +215,11 @@ if ($action === 'command') {
 
 // ─── ADMIN: Pages ──────────────────────────────────
 if ($action === 'admin_pages_read') {
+    $db = db_api('/config');
+    if ($db && isset($db['pages'])) {
+        echo json_encode($db);
+        exit;
+    }
     $file = __DIR__ . '/site-config.json';
     if (file_exists($file)) {
         echo file_get_contents($file);
@@ -201,6 +242,11 @@ if ($action === 'admin_pages_save') {
 
 // ─── ADMIN: Servers ─────────────────────────────────
 if ($action === 'admin_servers_read') {
+    $db = db_api('/servers');
+    if ($db && isset($db['servers'])) {
+        echo json_encode($db);
+        exit;
+    }
     $file = __DIR__ . '/servers-config.json';
     if (file_exists($file)) {
         echo file_get_contents($file);
@@ -225,6 +271,11 @@ if ($action === 'admin_servers_save') {
 
 // ─── ADMIN: Assets ──────────────────────────────────
 if ($action === 'admin_assets_read') {
+    $db = db_api('/assets');
+    if ($db && isset($db['assets'])) {
+        echo json_encode($db);
+        exit;
+    }
     $file = __DIR__ . '/assets.json';
     $data = file_exists($file) ? file_get_contents($file) : '[]';
     echo json_encode(['assets' => json_decode($data, true) ?: []]);
@@ -239,6 +290,11 @@ if ($action === 'admin_assets_save') {
 
 // ─── ADMIN: Blog ────────────────────────────────────
 if ($action === 'admin_blog_read') {
+    $db = db_api('/blog');
+    if ($db && is_array($db)) {
+        echo json_encode(['posts' => $db]);
+        exit;
+    }
     $file = __DIR__ . '/blog-posts.json';
     $data = file_exists($file) ? file_get_contents($file) : '[]';
     echo json_encode(['posts' => json_decode($data, true) ?: []]);

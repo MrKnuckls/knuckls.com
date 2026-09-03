@@ -203,7 +203,7 @@
 ;(async function(){
   const list = document.getElementById('blogList');
   try{
-    const resp = await fetch('/blog-posts.json');
+    const resp = await fetch('/console.php?action=blog');
     const posts = await resp.json();
     if(!posts || posts.length === 0){
       list.innerHTML = '<div class="blog-empty">No dev notes yet. First update coming soon.</div>';
