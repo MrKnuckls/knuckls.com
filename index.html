@@ -773,6 +773,13 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 #console .server-card .resource-item .r-bar{height:4px;background:var(--border);border-radius:2px;margin:4px 0;overflow:hidden}
 #console .server-card .resource-item .r-bar .r-fill{height:100%;border-radius:2px;transition:width .5s}
 #console .server-card .resource-item .r-val{font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted)}
+#console .gauge-card{padding:20px}
+#console .gauge-row{display:flex;gap:16px;justify-content:center;margin-top:10px;padding-top:12px;border-top:1px solid var(--border)}
+#console .gauge-cell{text-align:center;flex:1;min-width:80px}
+#console .gauge-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:0px}
+#console .sys-gauge{display:block;margin:0 auto;width:100%;max-width:110px;height:auto}
+#console .gauge-cell:first-child .sys-gauge{filter:drop-shadow(0 0 4px rgba(57,255,20,0.5))}
+#console .gauge-cell:nth-child(n+2) .sys-gauge{filter:drop-shadow(0 0 4px rgba(191,0,255,0.5))}
 #console .actions-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
 #console .actions-row .btn{font-size:.72rem;padding:4px 10px;font-family:var(--font-mono)}
 #console .btn-start{color:var(--accent);border-color:rgba(57,211,53,.3)}
@@ -1334,7 +1341,7 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
     if(!nodes) return;
     (async function loadStatus(){
       try {
-        var r = await fetch('/status.php?read=1', {signal:AbortSignal.timeout(5000)});
+        var r = await fetch('/status.php?read=1&pass=' + encodeURIComponent(PASS), {signal:AbortSignal.timeout(5000)});
         var data = await r.json();
         var list = data.nodes || [];
         if(empty) empty.style.display = 'none';
@@ -1343,12 +1350,19 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
           return;
         }
         nodes.innerHTML = list.map(function(n){
-          return '<div class="server-card"><div class="server-name">' + (n.label || 'proxmox') + '</div>' +
-            '<div class="resource-row">' +
-              '<div class="resource-item"><div class="r-label">CPU</div><div class="r-bar"><div class="r-fill" style="width:' + (n.cpu||0) + '%;background:' + (n.cpu > 80 ? 'var(--red)' : 'var(--accent)') + '"></div></div><div class="r-val">' + (n.cpu||0) + '%</div></div>' +
-              '<div class="resource-item"><div class="r-label">RAM</div><div class="r-bar"><div class="r-fill" style="width:' + (n.ram||0) + '%;background:var(--secondary)"></div></div><div class="r-val">' + (n.ram||0) + '%</div></div>' +
-              '<div class="resource-item"><div class="r-label">DISK</div><div class="r-bar"><div class="r-fill" style="width:' + (n.disk||0) + '%;background:var(--secondary)"></div></div><div class="r-val">' + (n.disk||0) + '%</div></div>' +
-            '</div>' +
+                  function g(pct, color){
+                    pct = Math.min(Math.max(pct||0, 0), 100);
+                    var r=36, cx=50, cy=48;
+                    var circ = Math.PI * r;
+                    var offset = circ * (1 - pct/100);
+                    return '<svg viewBox="0 0 100 58" class="sys-gauge"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="#1a1a1a" stroke-width="7" stroke-dasharray="'+circ+'" stroke-dashoffset="0" transform="rotate(180 '+cx+' '+cy+')"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" transform="rotate(180 '+cx+' '+cy+')"/><text x="'+cx+'" y="'+ (cy+6) +'" text-anchor="middle" fill="#fff" font-size="17" font-weight="700" font-family="var(--font-mono)">'+pct+'%</text></svg>';
+                  }
+                  return '<div class="server-card gauge-card"><div class="server-name">' + (n.label || 'proxmox') + '</div>' +
+                    '<div class="gauge-row">' +
+                      '<div class="gauge-cell"><div class="gauge-label">CPU</div>' + g(n.cpu, '#39ff14') + '</div>' +
+                      '<div class="gauge-cell"><div class="gauge-label">RAM</div>' + g(n.ram, '#bf00ff') + '</div>' +
+                      '<div class="gauge-cell"><div class="gauge-label">DISK</div>' + g(n.disk, '#bf00ff') + '</div>' +
+                    '</div>' +
             '<div style="display:flex;gap:16px;margin-top:8px;font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted)">' +
               '<span>🌡️ ' + (n.temp ? n.temp + '°C' : '—') + '</span>' +
               '<span>⏱️ ' + (n.uptime ? Math.floor(n.uptime/86400) + 'd' : '—') + '</span>' +
