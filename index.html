@@ -281,7 +281,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <span class="dot"></span>
       Online &mdash; Dayton, OH
     </div>
-    <img src="assets/img/knuckls-brass-K.png" alt="KNUCKLS" class="hero-logo">
+    <img src="assets/img/knuckls-K-hero.png" alt="KNUCKLS" class="hero-logo">
     <h1 class="hero-title">KNUCK<span class="highlight">LS</span></h1>
     <div class="hero-tagline" id="typing-line">
       <span id="typing-text"></span><span class="cursor"></span>
@@ -723,6 +723,29 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     <div class="assets-grid" id="assetsGrid">
       <div class="blog-empty">Loading available assets...</div>
     </div>
+
+    <!-- Upload Zone (password-protected) -->
+    <div id="uploadZone" style="margin-top:32px;display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-family:var(--font-mono);color:var(--text-muted);font-size:.85rem">🔐</span>
+        <input type="password" id="uploadPass" placeholder="Enter passkey" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--font-mono);font-size:.85rem;width:180px">
+        <button class="btn btn-outline" id="uploadUnlockBtn" style="font-size:.8rem">Unlock</button>
+        <span id="uploadAuthMsg" style="font-size:.8rem"></span>
+      </div>
+      <div id="uploadDropzone" style="display:none;border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s" draggable="false">
+        <div style="font-size:3rem;margin-bottom:8px">📁</div>
+        <div style="font-family:var(--font-head);font-weight:700;color:var(--text);margin-bottom:4px">Drop files here</div>
+        <div style="font-size:.8rem;color:var(--text-muted)">or click to browse · Max 100MB per file</div>
+        <input type="file" id="uploadFileInput" style="display:none" multiple>
+      </div>
+      <div id="uploadProgress" style="display:none;margin-top:12px">
+        <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+          <div id="uploadBar" style="height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .3s"></div>
+        </div>
+        <div id="uploadStatus" style="font-size:.78rem;color:var(--text-muted);margin-top:6px;font-family:var(--font-mono)"></div>
+      </div>
+      <div id="uploadResults" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
+    </div>
   </div>
 </section>
 
@@ -758,12 +781,13 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 #assets .asset-card .btn-download{background:var(--accent);color:var(--bg);padding:8px 20px;font-size:.85rem;border:none;border-radius:6px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;font-family:var(--font-head)}
 #assets .asset-card .btn-download:hover{background:#4be06a;transform:translateY(-1px)}
 #assets-empty{text-align:center;padding:40px;color:var(--text-muted)}
+#uploadDropzone.dragover{border-color:var(--accent);background:rgba(57,211,53,.05);transform:scale(1.01)}
 </style>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
-    <img src="assets/img/knuckls-brass-K.png" alt="K" class="footer-logo">
+    <img src="assets/img/knuckls-K-hero.png" alt="K" class="footer-logo">
     <div class="footer-tagline">Gamer. Server host. Lab rat.</div>
     <div class="footer-links">
       <a href="#hero">Home</a>
@@ -1563,6 +1587,89 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
     section.style.display = 'block';
     document.querySelectorAll('section').forEach(s => { if(s.id !== 'assets') s.style.display = 'none'; });
   }
+
+  // ─── UPLOADER ───────────────────────────────────────
+  const uploadZone = document.getElementById('uploadZone');
+  const uploadPass = document.getElementById('uploadPass');
+  const uploadUnlock = document.getElementById('uploadUnlockBtn');
+  const uploadAuthMsg = document.getElementById('uploadAuthMsg');
+  const uploadDropzone = document.getElementById('uploadDropzone');
+  const uploadFileInput = document.getElementById('uploadFileInput');
+  const uploadProgress = document.getElementById('uploadProgress');
+  const uploadBar = document.getElementById('uploadBar');
+  const uploadStatus = document.getElementById('uploadStatus');
+  const uploadResults = document.getElementById('uploadResults');
+  var PASS_VALUE = '';
+
+  function showUploadZone(){ uploadZone.style.display = 'block'; }
+  document.querySelector('a[href=\"#assets\"]')?.addEventListener('click', setTimeout.bind(null, showUploadZone, 50));
+  showUploadZone();
+
+  uploadUnlock.addEventListener('click', function(){
+    PASS_VALUE = uploadPass.value.trim();
+    if(!PASS_VALUE){ uploadAuthMsg.textContent = 'Enter passkey'; uploadAuthMsg.style.color = 'var(--red)'; return; }
+    var fd = new FormData();
+    fd.append('pass', PASS_VALUE);
+    fetch('/upload.php', {method:'POST', body:fd}).then(function(r){
+      if(r.ok){
+        uploadAuthMsg.textContent = '✓ Authorized';
+        uploadAuthMsg.style.color = 'var(--accent)';
+        uploadPass.style.display = 'none';
+        uploadUnlock.style.display = 'none';
+        uploadDropzone.style.display = 'block';
+      } else {
+        uploadAuthMsg.textContent = 'Wrong passkey';
+        uploadAuthMsg.style.color = 'var(--red)';
+      }
+    }).catch(function(){
+      uploadAuthMsg.textContent = 'Connection error';
+      uploadAuthMsg.style.color = 'var(--red)';
+    });
+  });
+
+  function uploadFile(file){
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('pass', PASS_VALUE);
+    fd.append('title', file.name.replace(/\.[^.]+$/, ''));
+    uploadProgress.style.display = 'block';
+    uploadBar.style.width = '0%';
+    uploadStatus.textContent = 'Uploading ' + file.name + '...';
+    var xhr = new XMLHttpRequest();
+    xhr.upload.addEventListener('progress', function(e){
+      if(e.lengthComputable){ uploadBar.style.width = Math.round(e.loaded/e.total*100)+'%'; }
+    });
+    xhr.addEventListener('load', function(){
+      try {
+        var r = JSON.parse(xhr.responseText);
+        if(r.ok){
+          uploadStatus.textContent = '✓ ' + file.name;
+          uploadBar.style.width = '100%';
+          var el = document.createElement('div');
+          el.style.cssText = 'padding:12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;color:var(--accent);font-family:var(--font-mono);background:rgba(57,211,53,.05)';
+          el.textContent = '✓ ' + r.msg;
+          uploadResults.prepend(el);
+          loadAssets();
+        } else {
+          uploadStatus.textContent = '✗ ' + r.msg;
+          uploadBar.style.background = 'var(--red)';
+        }
+      } catch(e){ uploadStatus.textContent = '✗ Failed'; uploadBar.style.background = 'var(--red)'; }
+    });
+    xhr.addEventListener('error', function(){ uploadStatus.textContent = '✗ Network error'; uploadBar.style.background = 'var(--red)'; });
+    xhr.open('POST', '/upload.php');
+    xhr.send(fd);
+  }
+
+  [].forEach.call(uploadFileInput.files||[], uploadFile);
+  uploadDropzone.addEventListener('dragover', function(e){ e.preventDefault(); this.classList.add('dragover'); });
+  uploadDropzone.addEventListener('dragleave', function(){ this.classList.remove('dragover'); });
+  uploadDropzone.addEventListener('drop', function(e){
+    e.preventDefault(); this.classList.remove('dragover');
+    [].forEach.call(e.dataTransfer.files, uploadFile);
+  });
+  uploadDropzone.addEventListener('click', function(){ uploadFileInput.click(); });
+  uploadFileInput.addEventListener('change', function(){ [].forEach.call(this.files, uploadFile); });
 })();
 </script>
 </body>
