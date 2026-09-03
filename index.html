@@ -594,7 +594,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 </section>
 
 <!-- CONSOLE / COMMAND CENTER -->
-<section id="console" style="display:none">
+<section id="console">
   <div class="container">
     <div class="section-label">/// console</div>
     <h2 class="section-title">Command Center</h2>
@@ -729,7 +729,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 </section>
 
 <!-- ASSETS / DOWNLOADS -->
-<section id="assets" style="display:none">
+<section id="assets">
   <div class="container">
     <div class="section-label">/// assets</div>
     <h2 class="section-title">Downloads</h2>
@@ -1027,775 +1027,398 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
 
 // ─── COMMAND CENTER ───────────────────────────────
 (function(){
-  const PASS = 'knuckls2026';
-  const section = document.getElementById('console');
-  const gate   = document.getElementById('consoleGate');
-  const dash   = document.getElementById('consoleDash');
-  const grid   = document.getElementById('consoleGrid');
-  const input  = document.getElementById('consolePass');
-  const unlock = document.getElementById('consoleUnlock');
-  const fail   = document.getElementById('consoleFail');
-  const status = document.getElementById('consoleStatus');
-  const last   = document.getElementById('consoleLast');
-  const toast  = document.getElementById('consoleToast');
-  const serverIds = ['palworld','starrupture','arma','dayz','hytale'];
-  let authed = false;
-  let timer = null;
+  var g = function(id){ return document.getElementById(id); };
+  var gate = g('consoleGate'), dash = g('consoleDash'), inp = g('consolePass'), btn = g('consoleUnlock'), fail = g('consoleFail');
+  var authed = false;
+  var timer = null;
+  var ws = null;
 
-  // Password unlock
   async function tryUnlock(){
-    const pass = input.value.trim();
+    var pass = inp ? inp.value.trim() : '';
     if(!pass) return;
     try {
-      const r = await fetch(`/console.php?action=auth&pass=${encodeURIComponent(pass)}`);
-      const d = await r.json();
-      if(d.authed){
+      var r = await fetch('/console.php?action=auth&pass=' + encodeURIComponent(pass));
+      var d = await r.json();
+      if(d && d.authed){
         authed = true;
-        gate.style.display = 'none';
-        dash.style.display = 'block';
+        if(gate) gate.style.display = 'none';
+        if(dash) dash.style.display = 'block';
         fetchStatus();
         timer = setInterval(fetchStatus, 15000);
       } else {
-        fail.style.display = 'block';
-        input.value = '';
-        input.focus();
+        if(fail){ fail.style.display = 'block'; fail.textContent = 'Wrong passkey'; }
       }
     } catch(e){
-      fail.textContent = 'Connection error';
-      fail.style.display = 'block';
+      if(fail){ fail.style.display = 'block'; fail.textContent = 'Connection error'; }
     }
   }
 
-  unlock.addEventListener('click', tryUnlock);
-  input.addEventListener('keydown', e => { if(e.key==='Enter') tryUnlock(); });
+  if(btn) btn.addEventListener('click', tryUnlock);
+  if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') tryUnlock(); });
 
-  // Fetch status from console.php
+  // ─── Dashboard functions ───
+  var PASS = 'knuckls2026';
+  var serverIds = ['palworld','starrupture','arma','dayz','hytale'];
+  var consoleGrid = g('consoleGrid');
+  var statusEl = g('consoleStatus');
+  var lastEl = g('consoleLast');
+  var toast = g('consoleToast');
+
+  // Tab switching
+  var tabSwitchers = document.querySelectorAll('#consoleTabs button');
+  tabSwitchers.forEach(function(t){
+    t.addEventListener('click', function(){
+      tabSwitchers.forEach(function(x){ x.style.background = ''; x.style.color = ''; x.style.borderColor = ''; });
+      this.style.background = 'var(--accent)'; this.style.color = 'var(--bg)'; this.style.borderColor = 'var(--accent)';
+      document.querySelectorAll('#consoleDash > div[id^="tab"]').forEach(function(d){ d.style.display = 'none'; });
+      var target = g(this.dataset.tab);
+      if(target) target.style.display = 'block';
+    });
+  });
+
+  // Auth state is checked server-side via PASS
   async function fetchStatus(){
     if(!authed) return;
     try {
-      const r = await fetch(`/console.php?action=status&pass=${encodeURIComponent(PASS)}`, {signal:AbortSignal.timeout(8000)});
-      const data = await r.json();
+      var r = await fetch('/console.php?action=status&pass=' + encodeURIComponent(PASS), {signal:AbortSignal.timeout(8000)});
+      var data = await r.json();
       renderGrid(data);
       loadUptime();
-      loadResources(document.getElementById('resourceServer')?.value || 'palworld', '24h');
-      status.textContent = '● monitoring';
-      last.textContent = `last: ${new Date().toLocaleTimeString()}`;
+      loadResources(g('resourceServer') ? g('resourceServer').value || 'palworld' : 'palworld', '24h');
+      if(statusEl) statusEl.textContent = '● monitoring';
+      if(lastEl) lastEl.textContent = 'last: ' + new Date().toLocaleTimeString();
     } catch(e){
-      status.textContent = '● error';
+      if(statusEl) statusEl.textContent = '● error';
     }
   }
 
-  // ─── UPTIME TIMELINE ───────────────────────
-  let currentRange = '24h';
-  async function loadUptime(range = currentRange){
-    currentRange = range;
-    const chart = document.getElementById('uptimeChart');
-    try {
-      const r = await fetch(`/uptime.php?range=${range}&server=all`, {signal:AbortSignal.timeout(8000)});
-      const data = await r.json();
-      const servers = data.servers || {};
-      const ids = Object.keys(servers);
-      if(ids.length === 0){
-        chart.innerHTML = '<div class="blog-empty" style="grid-column:span 2">No data yet — status checks will populate this.</div>';
-        return;
-      }
-      chart.innerHTML = '';
-      ids.forEach(sid => {
-        const bars = servers[sid] || [];
-        const label = sid === 'palworld' ? 'PalWorld' : sid === 'starrupture' ? 'StarRupture' : sid === 'arma' ? 'Reforger' : sid === 'dayz' ? 'DayZ' : sid === 'hytale' ? 'Hytale' : sid;
-        // Label column
-        const lbl = document.createElement('div');
-        lbl.style.cssText = 'font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted);text-align:right;padding-right:4px;white-space:nowrap';
-        lbl.textContent = label;
-        chart.appendChild(lbl);
-        // Bar row
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex;gap:2px;height:20px;align-items:flex-end';
-        bars.forEach(b => {
-          const bar = document.createElement('div');
-          const wPct = 100 / bars.length;
-          bar.style.cssText = `width:${wPct}%;height:14px;border-radius:2px;position:relative;cursor:help`;
-          if(b.online === true) {
-            bar.style.background = 'var(--accent)';
-            bar.title = 'Online';
-          } else if(b.online === false) {
-            bar.style.background = 'var(--red)';
-            bar.title = 'Offline';
-          } else {
-            bar.style.background = 'var(--border)';
-            bar.title = 'No data';
-          }
-          bar.addEventListener('mouseenter', function(){
-            const d = new Date(b.from * 1000);
-            this.style.opacity = '.8';
-            this.title = `${d.toLocaleTimeString()} — ${b.online === true ? 'Online' : b.online === false ? 'Offline' : 'No data'}`;
-          });
-          bar.addEventListener('mouseleave', function(){ this.style.opacity = '1'; });
-          row.appendChild(bar);
-        });
-        chart.appendChild(row);
-      });
-    } catch(e){
-      chart.innerHTML = '<div class="blog-empty" style="grid-column:span 2">Could not load uptime data.</div>';
-    }
-  }
-
-  // Wire range tabs
-  document.querySelectorAll('#uptimeRangeTabs button').forEach(btn => {
-    btn.addEventListener('click', function(){
-      const range = this.dataset.range;
-      document.querySelectorAll('#uptimeRangeTabs button').forEach(b => {
-        b.style.background = '';
-        b.style.color = '';
-        b.style.borderColor = '';
-      });
-      this.style.background = 'var(--accent)';
-      this.style.color = 'var(--bg)';
-      this.style.borderColor = 'var(--accent)';
-      loadUptime(range);
-    });
-  });
-
-  // Load uptime on auth
-  // (called from fetchStatus after render)
-
-  // Render server cards with resources + actions
   function renderGrid(data){
-    grid.innerHTML = serverIds.map(id => {
-      const s = data[id] || {};
-      const state = s.state || 'offline';
-      const isOn = s.online === true;
-      const cpuPct = Math.min((s.cpu || 0), 100);
-      const hasRamLimit = s.ram_limit && s.ram_limit > 0;
-      const hasDiskLimit = s.disk_limit && s.disk_limit > 0;
-      const ramPct = hasRamLimit ? Math.min((s.ram / s.ram_limit) * 100, 100) : -1;
-      const diskPct = hasDiskLimit ? Math.min((s.disk / s.disk_limit) * 100, 100) : -1;
-      const ramStr = s.ram ? (s.ram / 1048576).toFixed(0) + 'MB' : '—';
-      const ramMax = hasRamLimit ? '/' + (s.ram_limit / 1048576).toFixed(0) + 'MB' : '';
-      const diskStr = s.disk ? (s.disk / 1073741824).toFixed(1) + 'GB' : '—';
-      const diskMax = hasDiskLimit ? '/' + (s.disk_limit / 1073741824).toFixed(1) + 'GB' : '';
-      const gameIcon = {'PalWorld':'😮','StarRupture':'🌟','Arma Reforger':'🪖','DayZ':'🧟','Hytale':'🏔️'};
-      const icon = gameIcon[s.game] || '🎮';
-
-      return `<div class="server-card" data-console="${id}">
-        <div class="server-header">
-          <span class="server-name">${id === 'palworld' ? 'Knuckls Palworld' : id === 'starrupture' ? 'Knuckls_StarRupture' : id === 'arma' ? 'Knuckls Arma Reforger Server' : id === 'dayz' ? 'Knuckls DayZ Server' : 'knucklsHytale'}</span>
-          <span class="server-game">${icon} ${s.game || ''}</span>
-        </div>
-        <div class="server-status">
-          <span class="dot ${isOn ? 'online' : 'offline'}"></span>
-          <span class="${isOn ? 'online' : 'offline'}">${isOn ? 'RUNNING' : state.toUpperCase()}</span>
-        </div>
-        <div class="resource-row">
-          <div class="resource-item">
-            <div class="r-label">CPU</div>
-            <div class="r-bar"><div class="r-fill" style="width:${cpuPct}%;background:${cpuPct > 80 ? 'var(--red)' : cpuPct > 50 ? 'var(--secondary)' : 'var(--accent)'}"></div></div>
-            <div class="r-val">${cpuPct.toFixed(1)}%</div>
-          </div>
-          <div class="resource-item">
-            <div class="r-label">RAM</div>
-            <div class="r-bar"><div class="r-fill" style="width:${ramPct}%;background:${ramPct > 80 ? 'var(--red)' : ramPct > 50 ? 'var(--secondary)' : 'var(--accent)'}"></div></div>
-            <div class="r-val">${ramStr} ${ramMax}</div>
-          </div>
-          <div class="resource-item">
-            <div class="r-label">DISK</div>
-            <div class="r-bar"><div class="r-fill" style="width:${diskPct}%;background:${diskPct > 80 ? 'var(--red)' : diskPct > 50 ? 'var(--secondary)' : 'var(--accent)'}"></div></div>
-            <div class="r-val">${diskStr} ${diskMax}</div>
-          </div>
-        </div>
-        <div class="actions-row">
-          <button class="btn btn-outline btn-start" data-action="start" data-server="${id}" ${isOn ? 'disabled style="opacity:.3"' : ''}>▶ Start</button>
-          <button class="btn btn-outline btn-stop" data-action="stop" data-server="${id}" ${!isOn ? 'disabled style="opacity:.3"' : ''}>■ Stop</button>
-          <button class="btn btn-outline btn-restart" data-action="restart" data-server="${id}" ${!isOn ? 'disabled style="opacity:.3"' : ''}>↻ Restart</button>
-        </div>
-      </div>`;
+    if(!consoleGrid) return;
+    var arr = Object.keys(data).map(function(k){ var o=data[k]; o.id=k; return o; });
+        consoleGrid.innerHTML = arr.map(function(s){
+          var pct = s.cpu ? Math.min(Math.round(s.cpu), 100) : 0;
+          var ram_total = (s.ram_limit > 0) ? Math.round(s.ram_limit/1073741824*10)/10 : (s.ram ? '?' : 0);
+          var ram_used = s.ram ? (s.ram_limit > 0 ? Math.round(s.ram / s.ram_limit * 100) : Math.round(s.ram/1073741824*10)/10) : 0;
+          var ram_display = s.ram ? Math.round(s.ram/1048576*10)/10 + 'MB' : '—';
+          var ram_max_display = s.ram_limit > 0 ? Math.round(s.ram_limit/1048576*10)/10 + 'MB' : '?';
+          return '<div class="server-card" data-id="' + s.id + '">' +
+            '<div class="server-name">' + (s.game || s.id) + '</div>' +
+            '<div class="server-status"><span class="dot ' + (s.online ? 'online' : 'offline') + '"></span><span class="' + (s.online ? 'online' : 'offline') + '">' + (s.online ? 'ONLINE' : 'OFFLINE') + '</span></div>' +
+            '<div class="server-meta">' + (s.online ? s.state||'running' : 'offline') + '</div>' +
+            '<div class="resource-row">' +
+              '<div class="resource-item"><div class="r-label">CPU</div><div class="r-bar"><div class="r-fill" style="width:' + pct + '%;background:' + (pct > 80 ? 'var(--red)' : 'var(--accent)') + '"></div></div><div class="r-val">' + pct + '%</div></div>' +
+              '<div class="resource-item"><div class="r-label">RAM</div><div class="r-bar"><div class="r-fill" style="width:' + ram_used + '%;background:var(--secondary)"></div></div><div class="r-val">' + ram_display + (s.ram_limit > 0 ? ' / ' + ram_max_display : '') + '</div></div>' +
+            '</div>' +
+            '<div class="actions-row">' +
+              '<button class="btn btn-outline btn-start" onclick="sendCmd(\'' + s.id + '\',\'start\')" ' + (s.online ? 'disabled' : '') + '>▶ Start</button>' +
+              '<button class="btn btn-outline btn-stop" onclick="sendCmd(\'' + s.id + '\',\'stop\')" ' + (!s.online ? 'disabled' : '') + '>⏹ Stop</button>' +
+              '<button class="btn btn-outline btn-restart" onclick="sendCmd(\'' + s.id + '\',\'restart\')">↻ Restart</button>' +
+            '</div></div>';
     }).join('');
+  }
 
-    // Wire action buttons
-    grid.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', async function(){
-        const server = this.dataset.server;
-        const signal = this.dataset.action;
-        const origText = this.textContent;
-        this.textContent = '...';
-        this.disabled = true;
-        try {
-          const r = await fetch(`/console.php?action=power&server=${server}&signal=${signal}&pass=${encodeURIComponent(PASS)}`);
-          const d = await r.json();
-          showToast(d.ok ? `${signal} sent to ${server}` : `Failed: ${d.msg || 'error'}`);
-          setTimeout(fetchStatus, 2000);
-        } catch(e){
-          showToast('Connection error');
-        }
-        this.textContent = origText;
-        this.disabled = false;
-      });
+  window.sendCmd = function(id, action){
+    if(!authed) return;
+    fetch('/console.php?action=cmd&pass=' + encodeURIComponent(PASS) + '&server=' + id + '&cmd=' + action, {signal:AbortSignal.timeout(10000)})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(toast){ toast.textContent = d.ok ? '✓ ' + action + ' sent to ' + id : '✗ ' + (d.msg||'failed'); toast.style.display = 'block'; setTimeout(function(){ toast.style.display = 'none'; }, 4000); }
+      if(d.ok) setTimeout(fetchStatus, 3000);
     });
-  }
+  };
 
-  function showToast(msg){
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 3000);
-  }
+  g('consoleRefresh')?.addEventListener('click', fetchStatus);
 
-  // ─── RESOURCE HISTORY CHART ─────────────────
-  async function loadResources(server, range){
-    const canvas = document.getElementById('resCanvas');
-    const empty = document.getElementById('resEmpty');
+  // ─── Uptime Timeline ───
+  var uptimeRangeTabs = document.querySelectorAll('#uptimeRangeTabs button');
+  uptimeRangeTabs.forEach(function(t){
+    t.addEventListener('click', function(){ 
+      uptimeRangeTabs.forEach(function(x){ x.style.background = ''; x.style.color = ''; x.style.borderColor = ''; });
+      this.style.background = 'var(--accent)'; this.style.color = 'var(--bg)'; this.style.borderColor = 'var(--accent)';
+      loadUptime(this.dataset.range);
+    });
+  });
+
+  async function loadUptime(range){
+    range = range || '24h';
+    var chart = g('uptimeChart');
+    if(!chart) return;
     try {
-      empty.style.display = 'block';
-      empty.textContent = 'Loading...';
-      const r = await fetch(`/resources.php?server=${server}&range=${range}`, {signal:AbortSignal.timeout(8000)});
-      const data = await r.json();
-      const points = data.points || [];
-      if(points.length < 2){
-        empty.style.display = 'block';
-        empty.textContent = 'Need more data points — keep the console open.';
+      var r = await fetch('/uptime.php?range=' + range, {signal:AbortSignal.timeout(5000)});
+      var data = await r.json();
+      var slots = data.slots || [];
+      if(!slots.length){
+        chart.innerHTML = '<div class="blog-empty" style="grid-column:span 2">Collecting uptime data — check back after status checks run.</div>';
         return;
       }
-      empty.style.display = 'none';
-      
-      const ctx = canvas.getContext('2d');
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const W = rect.width;
-      const H = 180;
-      const pad = {top: 20, bottom: 25, left: 45, right: 15};
-      canvas.width = W * devicePixelRatio;
-      canvas.height = H * devicePixelRatio;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-      ctx.scale(devicePixelRatio, devicePixelRatio);
-      
-      // Compute scales
-      const cpuVals = points.map(p => p.cpu || 0);
-      const ramVals = points.map(p => p.ram || 0);
-      const maxCpu = Math.max(...cpuVals, 1);
-      const maxRam = Math.max(...ramVals, 1);
-      
-      const xScale = (W - pad.left - pad.right) / Math.max(points.length - 1, 1);
-      const cpuScale = (H - pad.top - pad.bottom) / maxCpu;
-      const ramScale = (H - pad.top - pad.bottom) / maxRam;
-      
-      // Background
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = 'rgba(0,0,0,0)';
-      ctx.fillRect(0, 0, W, H);
-      
-      // Grid lines
-      ctx.strokeStyle = 'rgba(255,255,255,.05)';
-      ctx.lineWidth = 1;
-      for(let y = 0; y < 4; y++){
-        const yy = pad.top + (y/3) * (H - pad.top - pad.bottom);
-        ctx.beginPath();
-        ctx.moveTo(pad.left, yy);
-        ctx.lineTo(W - pad.right, yy);
-        ctx.stroke();
-      }
-      
-      // CPU line
-      ctx.strokeStyle = '#39d335';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      points.forEach((p, i) => {
-        const x = pad.left + i * xScale;
-        const y = pad.top + (H - pad.top - pad.bottom) - (p.cpu || 0) * cpuScale;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-      
-      // RAM line
-      ctx.strokeStyle = '#ffb000';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      points.forEach((p, i) => {
-        const x = pad.left + i * xScale;
-        const y = pad.top + (H - pad.top - pad.bottom) - (p.ram || 0) * ramScale;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-      
-      // Dots for online/offline
-      points.forEach((p, i) => {
-        if(i % Math.ceil(points.length / 20) !== 0 && i !== points.length - 1) return;
-        const x = pad.left + i * xScale;
-        const y = pad.top + (H - pad.top - pad.bottom) - (p.cpu || 0) * cpuScale;
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = p.online ? '#39d335' : '#ff5555';
-        ctx.fill();
-      });
-      
-      // Y-axis labels
-      ctx.fillStyle = 'rgba(255,255,255,.4)';
-      ctx.font = '10px monospace';
-      ctx.textAlign = 'right';
-      // CPU
-      ctx.fillText('CPU ' + maxCpu.toFixed(0) + '%', pad.left - 5, pad.top + 10);
-      ctx.fillText('0%', pad.left - 5, H - pad.bottom);
-    } catch(e){
-      empty.style.display = 'block';
-      empty.textContent = 'Could not load resource history.';
-    }
-  }
-
-  // Wire resource controls
-  document.getElementById('resourceServer')?.addEventListener('change', function(){
-    loadResources(this.value, document.querySelector('#resRangeTabs button[style*=accent]')?.dataset.range || '24h');
-  });
-  document.querySelectorAll('#resRangeTabs button').forEach(btn => {
-    btn.addEventListener('click', function(){
-      const range = this.dataset.range;
-      document.querySelectorAll('#resRangeTabs button').forEach(b => {
-        b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
-      });
-      this.style.background = 'var(--accent)'; this.style.color = 'var(--bg)'; this.style.borderColor = 'var(--accent)';
-      const server = document.getElementById('resourceServer')?.value || 'palworld';
-      loadResources(server, range);
-    });
-  });
-
-  // ─── CONSOLE TAB SWITCHING ─────────────────────────
-  document.querySelectorAll('#consoleTabs button').forEach(btn => {
-    btn.addEventListener('click', function(){
-      const tabId = this.dataset.tab;
-      document.querySelectorAll('#consoleTabs button').forEach(b => {
-        b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
-      });
-      this.style.background = 'var(--accent)'; this.style.color = 'var(--bg)'; this.style.borderColor = 'var(--accent)';
-      document.querySelectorAll('#consoleDash > div[id^="tab"]').forEach(d => d.style.display = 'none');
-      document.getElementById(tabId).style.display = 'block';
-    });
-  });
-
-  // ─── LIVE LOGS (WebSocket Console) ──────────────
-  let logSocket = null;
-  let logWsToken = '';
-  let logWsSocket = '';
-  let logAutoScroll = true;
-  const logContainer = document.getElementById('logsContainer');
-  const logStatus = document.getElementById('logsStatus');
-  const logConnect = document.getElementById('logsConnect');
-  const logDisconnect = document.getElementById('logsDisconnect');
-  const logServer = document.getElementById('logsServer');
-  const logInput = document.getElementById('logsCmdInput');
-  const logSend = document.getElementById('logsCmdSend');
-  const logInputRow = document.getElementById('logsInputRow');
-
-  if(logContainer){
-    logContainer.addEventListener('scroll', () => {
-      logAutoScroll = logContainer.scrollTop + logContainer.clientHeight >= logContainer.scrollHeight - 30;
-    });
-
-    document.getElementById('logsConnect')?.addEventListener('click', async function(){
-      const srv = document.getElementById('logsServer').value;
-      logStatus.textContent = 'Connecting...';
-      logStatus.style.color = 'var(--secondary)';
-      try {
-        const r = await fetch(`/console.php?action=ws&pass=${encodeURIComponent(PASS)}&server=${srv}`, {signal:AbortSignal.timeout(8000)});
-        const data = await r.json();
-        if(data.error) throw new Error(data.error);
-        logWsToken = data.token;
-        logWsSocket = data.socket;
-        connectLogs(data.token, data.socket);
-      } catch(e){
-        logStatus.textContent = 'Connection failed: ' + e.message;
-        logStatus.style.color = 'var(--red)';
-      }
-    });
-
-    document.getElementById('logsDisconnect')?.addEventListener('click', function(){
-      disconnectLogs();
-    });
-
-    logSend?.addEventListener('click', function(){
-      const cmd = logInput.value.trim();
-      if(!cmd || !logSocket || logSocket.readyState !== WebSocket.OPEN) return;
-      const srv = logServer.value;
-      // Send via API
-      fetch(`/console.php?action=command&pass=${encodeURIComponent(PASS)}&server=${srv}&cmd=${encodeURIComponent(cmd)}`, {signal:AbortSignal.timeout(5000)}).catch(()=>{});
-      logContainer.appendChild(logLine('→ ' + cmd, 'var(--secondary)'));
-      logContainer.scrollTop = logContainer.scrollHeight;
-      logInput.value = '';
-    });
-
-    logInput?.addEventListener('keydown', function(e){
-      if(e.key === 'Enter') logSend?.click();
-    });
-  }
-
-  function connectLogs(token, socket){
-    if(logSocket) disconnectLogs();
-    logStatus.textContent = 'Connecting WebSocket...';
-    logStatus.style.color = 'var(--secondary)';
-    logContainer.innerHTML = '<span style="color:var(--text-muted)">Connecting to console...</span>';
-
-    logSocket = new WebSocket(socket);
-    logSocket.addEventListener('open', () => {
-      logSocket.send(JSON.stringify({event: 'auth', args: [token]}));
-      logStatus.textContent = 'Authenticating...';
-    });
-    logSocket.addEventListener('message', (e) => {
-      let msg;
-      try { msg = JSON.parse(e.data); } catch { return; }
-      if(msg.event === 'auth success'){
-        logStatus.textContent = 'Connected';
-        logStatus.style.color = 'var(--accent)';
-        logConnect.style.display = 'none';
-        logDisconnect.style.display = 'inline-block';
-        logInputRow.style.display = 'flex';
-        logContainer.innerHTML = '<span style="color:var(--text-muted)">Console connected. Waiting for output...</span>';
-        // Request console output
-        logSocket.send(JSON.stringify({event: 'send command', args: ['']}));
-      } else if(msg.event === 'console output'){
-        const out = (msg.args || []).join('');
-        if(out){
-          logContainer.appendChild(logLine(out, 'var(--text)'));
-          if(logAutoScroll) logContainer.scrollTop = logContainer.scrollHeight;
-        }
-      } else if(msg.event === 'daemon error' || msg.event === 'token expiring'){
-        logStatus.textContent = msg.args?.[0] || 'Error';
-        logStatus.style.color = 'var(--secondary)';
-      } else if(msg.event === 'token expired'){
-        disconnectLogs();
-        logStatus.textContent = 'Token expired — reconnect';
-        logStatus.style.color = 'var(--red)';
-      } else if(msg.event === 'status'){
-        // ignore status updates in log view
-      }
-    });
-    logSocket.addEventListener('close', () => {
-      disconnectLogs();
-    });
-    logSocket.addEventListener('error', () => {
-      logStatus.textContent = 'WebSocket error';
-      logStatus.style.color = 'var(--red)';
-    });
-  }
-
-  function disconnectLogs(){
-    if(logSocket) {
-      try{ logSocket.close(); }catch(e){}
-      logSocket = null;
-    }
-    logStatus.textContent = 'Disconnected';
-    logStatus.style.color = 'var(--text-muted)';
-    logConnect.style.display = 'inline-block';
-    logDisconnect.style.display = 'none';
-    logInputRow.style.display = 'none';
-  }
-
-  function logLine(text, color){
-    const d = document.createElement('div');
-    d.textContent = text;
-    if(color) d.style.color = color;
-    return d;
-  }
-
-  // ─── SYSTEM STATUS ──────────────────────────────────
-  async function loadSystemStatus(){
-    const nodes = document.getElementById('statusNodes');
-    const empty = document.getElementById('statusEmpty');
-    if(!nodes) return;
-    try {
-      const r = await fetch('/status.php?pass=' + encodeURIComponent(PASS), {signal:AbortSignal.timeout(8000)});
-      const data = await r.json();
-      if(!data.ok || !data.nodes || data.nodes.length === 0){
-        empty.style.display = 'block';
-        return;
-      }
-      empty.style.display = 'none';
-      const chartWrap = document.getElementById('statusChartWrap');
-      const allHistory = data.history || {};
-      nodes.innerHTML = data.nodes.map(n => {
-        const tempStr = n.temp > 0 ? n.temp.toFixed(1) + '°C' : 'N/A';
-        const uptimeStr = uptimeFmt(n.uptime || n.uptime);
-        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-            <span style="font-family:var(--font-head);font-weight:700;font-size:1.1rem;color:var(--text)">🖥️ ${n.label}</span>
-            <span style="font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono)">${timeSince(n.ts)}</span>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div><div class="r-label">CPU</div><div class="r-bar"><div class="r-fill" style="width:${n.cpu}%;background:${n.cpu > 80 ? 'var(--red)' : 'var(--accent)'}"></div></div><div class="r-val">${n.cpu.toFixed(1)}%</div></div>
-            <div><div class="r-label">RAM</div><div class="r-bar"><div class="r-fill" style="width:${n.ram}%;background:${n.ram > 80 ? 'var(--red)' : 'var(--secondary)'}"></div></div><div class="r-val">${n.ram.toFixed(1)}%</div></div>
-            <div><div class="r-label">Disk</div><div class="r-bar"><div class="r-fill" style="width:${n.disk}%;background:${n.disk > 85 ? 'var(--red)' : '#39d335'}"></div></div><div class="r-val">${n.disk.toFixed(1)}%</div></div>
-            <div><div class="r-label">Temp</div><div class="r-val" style="margin-top:4px">${tempStr}</div></div>
-          </div>
-          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono)">⏱ ${uptimeStr}</div>
-        </div>`;
+      chart.innerHTML = slots.map(function(slot){
+        var bars = data.servers.map(function(s){
+          var entry = slot[s] || null;
+          var color = 'gray';
+          if(entry === true) color = 'var(--accent)';
+          else if(entry === false) color = 'var(--red)';
+          return '<div style="flex:1;height:12px;background:' + color + ';border-radius:2px;min-width:2px" title="' + s + ': ' + (entry === true ? 'ONLINE' : entry === false ? 'OFFLINE' : 'no data') + '"></div>';
+        }).join('');
+        return '<div style="font-size:.65rem;color:var(--text-muted);text-align:right">' + (slot._label || '') + '</div><div style="display:flex;gap:2px;align-items:center">' + bars + '</div>';
       }).join('');
+    } catch(e){
+      if(chart) chart.innerHTML = '<div class="blog-empty" style="grid-column:span 2">Could not load uptime data.</div>';
+    }
+  }
 
-      // Show chart if history exists
-      const labels = Object.keys(allHistory);
-      if(labels.length > 0 && allHistory[labels[0]] && allHistory[labels[0]].length > 1){
-        chartWrap.style.display = 'block';
-        drawStatusChart(allHistory[labels[0]]);
+  // ─── Resource History ───
+  var resRangeTabs = document.querySelectorAll('#resRangeTabs button');
+  resRangeTabs.forEach(function(t){
+    t.addEventListener('click', function(){
+      resRangeTabs.forEach(function(x){ x.style.background = ''; x.style.color = ''; x.style.borderColor = ''; });
+      this.style.background = 'var(--accent)'; this.style.color = 'var(--bg)'; this.style.borderColor = 'var(--accent)';
+      loadResources(g('resourceServer') ? g('resourceServer').value : 'palworld', this.dataset.range);
+    });
+  });
+
+  g('resourceServer')?.addEventListener('change', function(){
+    loadResources(this.value, document.querySelector('#resRangeTabs button[style*=\"accent\"]')?.dataset?.range || '24h');
+  });
+
+  async function loadResources(server, range){
+    var canvas = g('resCanvas');
+    var empty = g('resEmpty');
+    if(!canvas) return;
+    try {
+      if(empty) empty.style.display = 'block';
+      var r = await fetch('/resources.php?server=' + server + '&range=' + (range||'24h'), {signal:AbortSignal.timeout(5000)});
+      var data = await r.json();
+      if(empty) empty.style.display = 'none';
+      var pts = data.points || [];
+      var ctx = canvas.getContext('2d');
+      var W = canvas.parentElement.clientWidth;
+      var H = 180;
+      canvas.width = W * 2; canvas.height = H * 2;
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.scale(2, 2);
+      ctx.clearRect(0, 0, W, H);
+      if(pts.length < 2){
+        ctx.fillStyle = 'var(--text-muted)'; ctx.font = '14px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('Not enough data yet', W/2, H/2);
+        return;
+      }
+      var maxCpu = Math.max.apply(null, pts.map(function(p){ return p.cpu || 0; })) * 1.2 || 100;
+      var maxRam = Math.max.apply(null, pts.map(function(p){ return p.ram || 0; })) * 1.2 || 1024;
+      // CPU line
+      ctx.beginPath(); ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 2;
+      pts.forEach(function(p, i){
+        var x = i / (pts.length-1) * W;
+        var y = H - (p.cpu||0) / maxCpu * (H-20);
+        if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      // RAM line
+      ctx.beginPath(); ctx.strokeStyle = 'var(--secondary)'; ctx.lineWidth = 2;
+      pts.forEach(function(p, i){
+        var x = i / (pts.length-1) * W;
+        var y = H - (p.ram||0) / maxRam * (H-20);
+        if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      // Labels
+      ctx.fillStyle = 'var(--text-muted)'; ctx.font = '10px monospace';
+      if(pts.length > 0){
+        var first = pts[0], last = pts[pts.length-1];
+        ctx.fillText(first.t || '', 4, H-4);
+        ctx.textAlign = 'right';
+        ctx.fillText(last.t || '', W-4, H-4);
       }
     } catch(e){
-      if(empty) empty.style.display = 'block';
+      if(empty) empty.textContent = 'Could not load resource data.';
     }
   }
 
-  function uptimeFmt(secs){
-    if(!secs) return 'unknown';
-    const d = Math.floor(secs / 86400);
-    const h = Math.floor((secs % 86400) / 3600);
-    return d + 'd ' + h + 'h';
-  }
+  // ─── Live Logs ───
+  var logsContainer = g('logsContainer');
+  var logsStatus = g('logsStatus');
+  var logsServer = g('logsServer');
+  var logsConnect = g('logsConnect');
+  var logsDisconnect = g('logsDisconnect');
+  var logsCmdInput = g('logsCmdInput');
+  var logsCmdSend = g('logsCmdSend');
+  var logsInputRow = g('logsInputRow');
 
-  function timeSince(ts){
-    const diff = Math.floor(Date.now()/1000) - ts;
-    if(diff < 60) return diff + 's ago';
-    if(diff < 3600) return Math.floor(diff/60) + 'm ago';
-    if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
-    return Math.floor(diff/86400) + 'd ago';
-  }
-
-  function drawStatusChart(points){
-    const c = document.getElementById('statusChart');
-    if(!c) return;
-    const ctx = c.getContext('2d');
-    const W = c.parentElement.clientWidth || 600;
-    const H = 200;
-    c.width = W * 2; c.height = H * 2;
-    c.style.width = W + 'px'; c.style.height = H + 'px';
-    ctx.scale(2, 2);
-    const pad = {left:50, top:20, bottom:20};
-    const chartW = W - pad.left - 20;
-    const chartH = H - pad.top - pad.bottom;
-    ctx.clearRect(0, 0, W, H);
-
-    const vals = points.map(p => ({cpu: p.cpu || 0, ram: p.ram || 0}));
-    const maxCpu = Math.max(...vals.map(v => v.cpu), 10);
-    const maxRam = Math.max(...vals.map(v => v.ram), 10);
-    const maxV = Math.max(maxCpu, maxRam, 50);
-    const cpuScale = chartH / Math.min(maxV * 1.2, 100);
-    const ramScale = chartH / Math.min(maxV * 1.2, 100);
-
-    // CPU line
-    ctx.strokeStyle = '#39d335';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    vals.forEach((v, i) => {
-      const x = pad.left + i / (vals.length - 1) * chartW;
-      const y = pad.top + chartH - v.cpu * cpuScale;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // RAM line
-    ctx.strokeStyle = '#ffb000';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    vals.forEach((v, i) => {
-      const x = pad.left + i / (vals.length - 1) * chartW;
-      const y = pad.top + chartH - v.ram * ramScale;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Labels
-    ctx.fillStyle = 'rgba(255,255,255,.4)';
-    ctx.font = '10px monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(maxV.toFixed(0) + '%', pad.left - 5, pad.top + 10);
-    ctx.fillText('0', pad.left - 5, H - pad.bottom);
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#39d335';
-    ctx.fillText('CPU', W - 60, pad.top + 10);
-    ctx.fillStyle = '#ffb000';
-    ctx.fillText('RAM', W - 60, pad.top + 24);
-  }
-
-  // Load system status when tab is activated
-  document.querySelector('#consoleTabs button[data-tab="tabStatus"]')?.addEventListener('click', function(){
-    setTimeout(loadSystemStatus, 100);
-  });
-
-  // Refresh button
-  document.getElementById('consoleRefresh')?.addEventListener('click', fetchStatus);
-
-  // Show section when nav link clicked
-  document.querySelector('a[href="#console"]')?.addEventListener('click', function(e){
-    e.preventDefault();
-    section.style.display = 'block';
-    document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = 'none'; });
-    document.getElementById('navLinks').classList.remove('open');
-    window.scrollTo(0, 0);
-  });
-
-  // Pause monitoring when leaving
-  window.addEventListener('hashchange', ()=>{
-    if(window.location.hash !== '#console' && timer){
-      clearInterval(timer);
-      timer = null;
+  if(logsConnect) logsConnect.addEventListener('click', function(){
+    if(ws) { ws.close(); ws = null; }
+    var server = logsServer ? logsServer.value : 'palworld';
+    var url = 'wss://node.knucklsgames.com/api/servers/' + server + '/ws';
+    try {
+      ws = new WebSocket(url);
+      ws.onopen = function(){
+        if(logsStatus) logsStatus.textContent = '● Connected';
+        if(logsConnect) logsConnect.style.display = 'none';
+        if(logsDisconnect) logsDisconnect.style.display = 'inline';
+        if(logsInputRow) logsInputRow.style.display = 'flex';
+      };
+      ws.onmessage = function(ev){
+        if(logsContainer){
+          var d = document.createElement('div');
+          d.textContent = ev.data;
+          logsContainer.appendChild(d);
+          logsContainer.scrollTop = logsContainer.scrollHeight;
+          if(logsContainer.children.length > 500) logsContainer.removeChild(logsContainer.firstChild);
+        }
+      };
+      ws.onclose = function(){
+        if(logsStatus) logsStatus.textContent = 'Disconnected';
+        if(logsConnect) logsConnect.style.display = 'inline';
+        if(logsDisconnect) logsDisconnect.style.display = 'none';
+        if(logsInputRow) logsInputRow.style.display = 'none';
+        ws = null;
+      };
+      ws.onerror = function(){
+        if(logsStatus) logsStatus.textContent = 'Connection error (check panel)';
+      };
+    } catch(e){
+      if(logsStatus) logsStatus.textContent = 'Connection failed';
     }
-    if(window.location.hash === '#console'){
-      section.style.display = 'block';
-      document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = 'none'; });
-      if(!authed && gate.style.display !== 'none'){
-        // stays on gate
-      } else if(authed){
-        fetchStatus();
-        timer = setInterval(fetchStatus, 15000);
+  });
+
+  if(logsDisconnect) logsDisconnect.addEventListener('click', function(){
+    if(ws) { ws.close(); ws = null; }
+  });
+
+  if(logsCmdSend) logsCmdSend.addEventListener('click', function(){
+    if(!ws || !logsCmdInput) return;
+    var cmd = logsCmdInput.value.trim();
+    if(cmd) { ws.send(cmd); logsCmdInput.value = ''; }
+  });
+
+  if(logsCmdInput) logsCmdInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' && logsCmdSend) logsCmdSend.click();
+  });
+
+  // ─── System Status ───
+  // (loads from status.php, data fed by agent on Proxmox)
+  g('tabStatus') && setTimeout(function(){
+    var nodes = g('statusNodes');
+    var empty = g('statusEmpty');
+    if(!nodes) return;
+    (async function loadStatus(){
+      try {
+        var r = await fetch('/status.php?read=1', {signal:AbortSignal.timeout(5000)});
+        var data = await r.json();
+        var list = data.nodes || [];
+        if(empty) empty.style.display = 'none';
+        if(list.length === 0){
+          if(empty){ empty.style.display = 'block'; empty.textContent = 'No system agents reporting yet. Install the agent on your Proxmox host.'; }
+          return;
+        }
+        nodes.innerHTML = list.map(function(n){
+          return '<div class="server-card"><div class="server-name">' + (n.label || 'proxmox') + '</div>' +
+            '<div class="resource-row">' +
+              '<div class="resource-item"><div class="r-label">CPU</div><div class="r-bar"><div class="r-fill" style="width:' + (n.cpu||0) + '%;background:' + (n.cpu > 80 ? 'var(--red)' : 'var(--accent)') + '"></div></div><div class="r-val">' + (n.cpu||0) + '%</div></div>' +
+              '<div class="resource-item"><div class="r-label">RAM</div><div class="r-bar"><div class="r-fill" style="width:' + (n.ram||0) + '%;background:var(--secondary)"></div></div><div class="r-val">' + (n.ram||0) + '%</div></div>' +
+              '<div class="resource-item"><div class="r-label">DISK</div><div class="r-bar"><div class="r-fill" style="width:' + (n.disk||0) + '%;background:var(--secondary)"></div></div><div class="r-val">' + (n.disk||0) + '%</div></div>' +
+            '</div>' +
+            '<div style="display:flex;gap:16px;margin-top:8px;font-family:var(--font-mono);font-size:.72rem;color:var(--text-muted)">' +
+              '<span>🌡️ ' + (n.temp ? n.temp + '°C' : '—') + '</span>' +
+              '<span>⏱️ ' + (n.uptime ? Math.floor(n.uptime/86400) + 'd' : '—') + '</span>' +
+              '<span>🕐 ' + (n.time || '') + '</span>' +
+            '</div></div>';
+        }).join('');
+      } catch(e){
+        if(empty){ empty.style.display = 'block'; empty.textContent = 'System status endpoint unreachable.'; }
       }
-    } else if(window.location.hash){
-      section.style.display = 'none';
-      document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = ''; });
+    })();
+  }, 100);
+
+  // ─── Hash monitoring ───
+  window.addEventListener('hashchange', function(){
+    if(window.location.hash === '#console' && authed){
+      fetchStatus();
+      if(!timer) timer = setInterval(fetchStatus, 15000);
     }
   });
-
-  // On page load, check hash
-  if(window.location.hash === '#console'){
-    section.style.display = 'block';
-    document.querySelectorAll('section').forEach(s => { if(s.id !== 'console') s.style.display = 'none'; });
-    setTimeout(() => input?.focus(), 300);
-  }
 })();
 
 // ─── ASSETS / DOWNLOADS ───────────────────────────
-(async function(){
-  const section = document.getElementById('assets');
-  const grid   = document.getElementById('assetsGrid');
+(function(){
+  var grid = document.getElementById('assetsGrid');
+  var uploadZone = document.getElementById('uploadZone');
 
   async function loadAssets(){
+    if(!grid) return;
     try {
-      const r = await fetch('/assets.json', {signal: AbortSignal.timeout(5000)});
-      const list = await r.json();
+      var r = await fetch('/assets.json');
+      var list = await r.json();
       if(!list || list.length === 0){
         grid.innerHTML = '<div id="assets-empty">No assets available yet.</div>';
         return;
       }
-      grid.innerHTML = list.map(a => {
-        const icon = a.type === 'zip' ? '📦' : a.type === 'lua' ? '📜' : a.type === 'cfg' ? '⚙️' : a.type === 'png' ? '🖼️' : a.type === 'yml' ? '📋' : '📄';
-        return `<div class="asset-card">
-          ${a.preview ? `<img class="asset-preview" src="${a.preview}" alt="${a.title}" loading="lazy">` : ''}
-          <div class="asset-header">
-            <span class="asset-icon">${icon}</span>
-            <span class="asset-title">${a.title}</span>
-            <span class="asset-type">${a.type}</span>
-          </div>
-          <div class="asset-desc">${a.desc}</div>
-          <div class="asset-meta">
-            <span>📏 ${a.size}</span>
-          </div>
-          <button class="btn-download" data-asset="${a.id}">⬇ Download</button>
-        </div>`;
+      grid.innerHTML = list.map(function(a){
+        var icon = '📄';
+        if(a.type === 'zip') icon = '📦';
+        else if(a.type === 'lua') icon = '📜';
+        else if(a.type === 'png') icon = '🖼️';
+        var previewHtml = '';
+        if(a.preview) previewHtml = '<img class="asset-preview" src="' + a.preview + '" alt="' + a.title + '" loading="lazy" onclick="document.getElementById(\'previewLightbox\').style.display=\'flex\';document.getElementById(\'previewLightbox\').querySelector(\'img\').src=this.src">';
+        return '<div class="asset-card">' + previewHtml + '<div class="asset-header"><span class="asset-icon">' + icon + '</span><span class="asset-title">' + a.title + '</span><span class="asset-type">' + (a.type||'') + '</span></div><p class="asset-desc">' + (a.desc||'') + '</p><div class="asset-meta"><span>📏 ' + (a.size||'unknown') + '</span></div><a class="btn btn-primary btn-download" href="/download.php?asset=' + a.id + '">⬇ Download</a></div>';
       }).join('');
-
-      grid.querySelectorAll('.btn-download').forEach(btn => {
-        btn.addEventListener('click', function(){
-          const asset = this.dataset.asset;
-          const orig = this.textContent;
-          this.textContent = '↓ downloading...';
-          this.disabled = true;
-          window.location.href = `/download.php?asset=${asset}`;
-          setTimeout(() => {
-            this.textContent = orig;
-            this.disabled = false;
-          }, 3000);
-        });
-      });
-
-      // Preview image lightbox
-      grid.querySelectorAll('.asset-preview').forEach(img => {\n        img.addEventListener('click', function(e){\n          e.stopPropagation();\n          const lightbox = document.getElementById('previewLightbox');\n          const lightboxImg = lightbox.querySelector('img');\n          lightboxImg.src = this.src;\n          lightbox.style.display = 'flex';\n        });\n      });\n    } catch(e){
-      grid.innerHTML = '<div id="assets-empty">Could not load assets list.</div>';
+    } catch(e){
+      grid.innerHTML = '<div id="assets-empty">Could not load assets.</div>';
     }
   }
 
-  loadAssets();
+  // Upload gate
+  var uploadGate = document.getElementById('uploadGate');
+  var uploadPass = document.getElementById('uploadPass');
+  var uploadUnlock = document.getElementById('uploadUnlock');
+  var uploadAuthMsg = document.getElementById('uploadAuthMsg');
+  var uploadDropzone = document.getElementById('uploadDropzone');
+  var uploadFileInput = document.getElementById('uploadFileInput');
 
-  document.querySelector('a[href="#assets"]')?.addEventListener('click', function(){
-    document.getElementById('navLinks').classList.remove('open');
-    setTimeout(function(){
-      document.getElementById('uploadZone').style.display = 'block';
-    }, 50);
-  });
-
-  // ─── UPLOADER ───────────────────────────────────────
-  const uploadZone = document.getElementById('uploadZone');
-  const uploadPass = document.getElementById('uploadPass');
-  const uploadUnlock = document.getElementById('uploadUnlockBtn');
-  const uploadAuthMsg = document.getElementById('uploadAuthMsg');
-  const uploadDropzone = document.getElementById('uploadDropzone');
-  const uploadFileInput = document.getElementById('uploadFileInput');
-  const uploadProgress = document.getElementById('uploadProgress');
-  const uploadBar = document.getElementById('uploadBar');
-  const uploadStatus = document.getElementById('uploadStatus');
-  const uploadResults = document.getElementById('uploadResults');
-  var PASS_VALUE = '';
-
-  function showUploadZone(){ uploadZone.style.display = 'block'; }
-  document.querySelector('a[href="#assets"]')?.addEventListener('click', setTimeout.bind(null, showUploadZone, 50));
-  showUploadZone();
-
-  uploadUnlock.addEventListener('click', function(){
-    PASS_VALUE = uploadPass.value.trim();
-    if(!PASS_VALUE){ uploadAuthMsg.textContent = 'Enter passkey'; uploadAuthMsg.style.color = 'var(--red)'; return; }
-    var fd = new FormData();
-    fd.append('pass', PASS_VALUE);
-    fetch('/upload.php', {method:'POST', body:fd}).then(function(r){
-      if(r.ok){
-        uploadAuthMsg.textContent = '✓ Authorized';
-        uploadAuthMsg.style.color = 'var(--accent)';
-        uploadPass.style.display = 'none';
-        uploadUnlock.style.display = 'none';
-        uploadDropzone.style.display = 'block';
+  if(uploadUnlock) uploadUnlock.addEventListener('click', function(){
+    var val = uploadPass ? uploadPass.value.trim() : '';
+    if(!val){ if(uploadAuthMsg) uploadAuthMsg.textContent = 'Enter passkey'; return; }
+    var x = new XMLHttpRequest();
+    x.open('POST', '/upload.php');
+    var fd = new FormData(); fd.append('pass', val);
+    x.onload = function(){
+      if(x.status === 200){
+        if(uploadAuthMsg) uploadAuthMsg.textContent = '✓ Authorized';
+        if(uploadPass) uploadPass.style.display = 'none';
+        if(uploadUnlock) uploadUnlock.style.display = 'none';
+        if(uploadGate) uploadGate.style.display = 'none';
+        if(uploadDropzone) uploadDropzone.style.display = 'block';
+        loadAssets();
       } else {
-        uploadAuthMsg.textContent = 'Wrong passkey';
-        uploadAuthMsg.style.color = 'var(--red)';
+        if(uploadAuthMsg) uploadAuthMsg.textContent = 'Wrong passkey';
       }
-    }).catch(function(){
-      uploadAuthMsg.textContent = 'Connection error';
-      uploadAuthMsg.style.color = 'var(--red)';
-    });
+    };
+    x.send(fd);
   });
 
-  function uploadFile(file){
-    var fd = new FormData();
-    fd.append('file', file);
-    fd.append('pass', PASS_VALUE);
-    fd.append('title', file.name.replace(/\.[^.]+$/, ''));
-    uploadProgress.style.display = 'block';
-    uploadBar.style.width = '0%';
-    uploadStatus.textContent = 'Uploading ' + file.name + '...';
-    var xhr = new XMLHttpRequest();
-    xhr.upload.addEventListener('progress', function(e){
-      if(e.lengthComputable){ uploadBar.style.width = Math.round(e.loaded/e.total*100)+'%'; }
+  if(uploadDropzone){
+    uploadDropzone.addEventListener('dragover', function(e){ e.preventDefault(); this.classList.add('dragover'); });
+    uploadDropzone.addEventListener('dragleave', function(){ this.classList.remove('dragover'); });
+    uploadDropzone.addEventListener('drop', function(e){
+      e.preventDefault(); this.classList.remove('dragover');
+      [].forEach.call(e.dataTransfer.files, function(f){ uploadFile(f); });
     });
-    xhr.addEventListener('load', function(){
-      try {
-        var r = JSON.parse(xhr.responseText);
-        if(r.ok){
-          uploadStatus.textContent = '✓ ' + file.name;
-          uploadBar.style.width = '100%';
-          var el = document.createElement('div');
-          el.style.cssText = 'padding:12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;color:var(--accent);font-family:var(--font-mono);background:rgba(57,211,53,.05)';
-          el.textContent = '✓ ' + r.msg;
-          uploadResults.prepend(el);
-          loadAssets();
-        } else {
-          uploadStatus.textContent = '✗ ' + r.msg;
-          uploadBar.style.background = 'var(--red)';
-        }
-      } catch(e){ uploadStatus.textContent = '✗ Failed'; uploadBar.style.background = 'var(--red)'; }
-    });
-    xhr.addEventListener('error', function(){ uploadStatus.textContent = '✗ Network error'; uploadBar.style.background = 'var(--red)'; });
-    xhr.open('POST', '/upload.php');
-    xhr.send(fd);
+    uploadDropzone.addEventListener('click', function(){ if(uploadFileInput) uploadFileInput.click(); });
+    if(uploadFileInput) uploadFileInput.addEventListener('change', function(){ [].forEach.call(this.files, function(f){ uploadFile(f); }); });
   }
 
-  [].forEach.call(uploadFileInput.files||[], uploadFile);
-  uploadDropzone.addEventListener('dragover', function(e){ e.preventDefault(); this.classList.add('dragover'); });
-  uploadDropzone.addEventListener('dragleave', function(){ this.classList.remove('dragover'); });
-  uploadDropzone.addEventListener('drop', function(e){
-    e.preventDefault(); this.classList.remove('dragover');
-    [].forEach.call(e.dataTransfer.files, uploadFile);
-  });
-  uploadDropzone.addEventListener('click', function(){ uploadFileInput.click(); });
-  uploadFileInput.addEventListener('change', function(){ [].forEach.call(this.files, uploadFile); });
-})();
-</script>
+  async function uploadFile(file){
+    var fd = new FormData();
+    fd.append('pass', 'knuckls2026');
+    fd.append('file', file);
+    fd.append('title', file.name.replace(/\.[^.]+$/, '') || file.name.substring(0, 50));
+    try {
+      var r = await fetch('/upload.php', {method:'POST', body:fd});
+      var d = await r.json();
+      if(d && d.ok) loadAssets();
+    } catch(e){}
+  }
+
+  loadAssets();
+})();</script>
 <div id="previewLightbox" onclick="this.style.display='none'"><img src="" alt="Preview"></div>
 
 </body>
