@@ -256,7 +256,7 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
 
 // ─── COMMAND CENTER ───────────────────────────────
 // Global auth function — called by inline onclick/onkeydown
-window.knucklsV8730 = async function(){
+window.consoleAuthFn = async function(){
   var inp = document.getElementById('consolePass');
   var gate = document.getElementById('consoleGate');
   var dash = document.getElementById('consoleDash');
@@ -269,8 +269,8 @@ window.knucklsV8730 = async function(){
     if(d && d.authed){
       if(gate) gate.style.display = 'none';
       if(dash) dash.style.display = 'block';
-      sessionStorage.setItem('ka8730', '1');
-      window.dispatchEvent(new Event('ka8730'));
+      sessionStorage.setItem('caSession', '1');
+      window.dispatchEvent(new Event('caSession'));
     } else {
       if(fail){ fail.style.display = 'block'; fail.textContent = 'Wrong passkey'; }
     }
@@ -284,10 +284,10 @@ window.knucklsV8730 = async function(){
   var gate = g('consoleGate'), dash = g('consoleDash'), inp = g('consolePass'), fail = g('consoleFail');
   var authed = false;
     // Auto-auth if already logged in
-    if(sessionStorage.getItem('ka8730')){
+    if(sessionStorage.getItem('caSession')){
       if(g('consoleGate')) g('consoleGate').style.display = 'none';
       if(g('consoleDash')) g('consoleDash').style.display = 'block';
-      window.dispatchEvent(new Event('ka8730'));
+      window.dispatchEvent(new Event('caSession'));
     }
       var timer = null;
     var ws = null;
@@ -296,7 +296,7 @@ window.knucklsV8730 = async function(){
       var PASS = 'knuckls2026';
   
       // Listen for global auth event
-      window.addEventListener('ka8730', function(){
+      window.addEventListener('caSession', function(){
         authed = true;
         fetchStatus();
         if(typeof timer !== 'undefined' && timer) clearInterval(timer);

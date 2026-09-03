@@ -604,9 +604,9 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
       <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:24px">This dashboard is for server admins only.</p>
       <div style="display:flex;gap:8px;justify-content:center">
         <input type="password" id="consolePass" placeholder="Passkey" 
-                  onkeydown="if(event.key==='Enter') knucklsV8730()"
+                  onkeydown="if(event.key==='Enter') consoleAuthFn()"
                   style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--font-mono);font-size:.9rem;width:200px;outline:none">
-        <button class="btn btn-primary" id="consoleBtn" onclick="knucklsV8730()" style="padding:10px 20px;font-size:.85rem">Unlock</button>
+        <button class="btn btn-primary" id="consoleBtn" onclick="consoleAuthFn()" style="padding:10px 20px;font-size:.85rem">Unlock</button>
       </div>
       <p id="consoleFail" style="color:var(--red);font-size:.8rem;margin-top:12px;display:none">Wrong passkey</p>
     </div>
@@ -826,7 +826,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
   </div>
 </footer>
 
-<script src="app-v9.js?v=11"></script>
+<script src="app-v10.js?v=1"></script>
 <div id="previewLightbox" onclick="this.style.display='none'"><img src="" alt="Preview"></div>
 
 </body>
