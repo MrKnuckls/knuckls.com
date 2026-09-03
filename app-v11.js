@@ -732,7 +732,7 @@ window.consoleAuthFn = async function(){
     document.body.style.overflow = '';
   };
 
-  function openGameDetail(gameId){
+  window.openGameDetail = function(gameId){
     if(!overlay) return;
     // Fetch game data
     fetch('/games-detail.json')
@@ -864,15 +864,4 @@ window.consoleAuthFn = async function(){
       }
     }
   };
-
-  // Click handlers on game cards
-  var cards = document.querySelectorAll('.game-card[data-game]');
-  for(var i=0; i<cards.length; i++){
-    cards[i].addEventListener('click', function(e){
-      // Don't open if clicking a link inside the card
-      if(e.target.tagName === 'A') return;
-      var id = this.getAttribute('data-game');
-      if(id) openGameDetail(id);
-    });
-  }
 })();
