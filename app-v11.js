@@ -179,7 +179,8 @@
 
 // Discord widget
 (function(){
-  const guildId = localStorage.getItem('knuckls-discord-id');
+  const guildId = '1204210102744256564';
+  const guildInvite = 'https://discord.gg/vpgDp2xtqg';
   async function fetchWidget(){
     if(!guildId) return;
     try{
@@ -190,12 +191,20 @@
       if(data.instant_invite){
         document.getElementById('discordJoinBtn').href = data.instant_invite;
       }
-    } catch(e){}
+    } catch(e){
+      // Widget disabled or rate-limited — fallback to static invite
+      document.getElementById('discordJoinBtn').href = guildInvite;
+    }
   }
-  
-  // If guild ID is saved, fetch; otherwise show placeholder
+
+  // If guild ID is saved, fetch; otherwise use default
   if(guildId){
     fetchWidget();
+  }
+  // Always set a fallback href
+  var btn = document.getElementById('discordJoinBtn');
+  if(btn && (!btn.href || btn.href === '#' || btn.href === '')){
+    btn.href = guildInvite;
   }
 })();
 
@@ -865,4 +874,14 @@ window.consoleAuthFn = async function(){
       }
     }
   };
-})();
+  })();
+  // ─── Back to Top ─────────────────────────────────
+  (function(){
+    var btn = document.getElementById('backToTop');
+    if(!btn) return;
+    var toggle = function(){
+      btn.classList.toggle('show', window.scrollY > 600);
+    };
+    window.addEventListener('scroll', toggle);
+    btn.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+  })();

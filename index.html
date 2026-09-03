@@ -229,6 +229,11 @@ footer .footer-links a{color:var(--text-muted);font-size:.85rem;transition:color
 footer .footer-links a:hover{color:var(--accent)}
 footer .copy{font-size:.78rem;color:var(--text-muted)}
 
+/* back to top */
+#backToTop{position:fixed;bottom:40px;right:30px;z-index:9999;width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--bg);border:none;font-size:1.4rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+#backToTop.show{opacity:1;pointer-events:auto}
+#backToTop:hover{transform:translateY(-4px);box-shadow:0 6px 24px rgba(57,211,53,.3)}
+
 /* responsive */
 @media(max-width:768px){
   nav .nav-links{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:rgba(13,17,23,.98);flex-direction:column;padding:24px;gap:16px;border-bottom:1px solid var(--border);z-index:99}
@@ -572,7 +577,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <div class="icon">🎮</div>
         <div class="label">Steam</div>
         <div class="handle">MrKnuckls</div>
-        <a href="#" class="btn btn-outline" style="font-size:.8rem;padding:8px 16px">Add me</a>
+        <a href="https://steamcommunity.com/profiles/76561198288585248" class="btn btn-outline" style="font-size:.8rem;padding:8px 16px" target="_blank">Add me</a>
       </div>
       <div class="connect-card">
         <div class="icon">📧</div>
@@ -948,6 +953,9 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
   </div>
 </div>
 
-<script src="app-v11.js?v=5"></script>
+<!-- Back to top -->
+<button id="backToTop" title="Back to top">↑</button>
+
+<script src="app-v11.js?v=6"></script>
 </body>
 </html>
