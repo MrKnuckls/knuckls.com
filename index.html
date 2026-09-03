@@ -796,6 +796,10 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 #assets .asset-card .btn-download:hover{background:#4be06a;transform:translateY(-1px)}
 #assets-empty{text-align:center;padding:40px;color:var(--text-muted)}
 #uploadDropzone.dragover{border-color:var(--accent);background:rgba(57,211,53,.05);transform:scale(1.01)}
+#assets .asset-card .asset-preview{width:100%;border-radius:8px;margin-bottom:12px;display:block;cursor:pointer;border:1px solid var(--border);transition:all .2s}
+#assets .asset-card .asset-preview:hover{border-color:var(--accent);transform:scale(1.02)}
+#previewLightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);cursor:zoom-out;align-items:center;justify-content:center}
+#previewLightbox img{max-width:90vw;max-height:90vh;border-radius:12px;border:2px solid var(--border)}
 </style>
 
 <!-- FOOTER -->
@@ -1665,6 +1669,7 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
       grid.innerHTML = list.map(a => {
         const icon = a.type === 'zip' ? '📦' : a.type === 'lua' ? '📜' : a.type === 'cfg' ? '⚙️' : a.type === 'png' ? '🖼️' : a.type === 'yml' ? '📋' : '📄';
         return `<div class="asset-card">
+          ${a.preview ? `<img class="asset-preview" src="${a.preview}" alt="${a.title}" loading="lazy">` : ''}
           <div class="asset-header">
             <span class="asset-icon">${icon}</span>
             <span class="asset-title">${a.title}</span>
@@ -1691,7 +1696,9 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
           }, 3000);
         });
       });
-    } catch(e){
+
+      // Preview image lightbox
+      grid.querySelectorAll('.asset-preview').forEach(img => {\n        img.addEventListener('click', function(e){\n          e.stopPropagation();\n          const lightbox = document.getElementById('previewLightbox');\n          const lightboxImg = lightbox.querySelector('img');\n          lightboxImg.src = this.src;\n          lightbox.style.display = 'flex';\n        });\n      });\n    } catch(e){
       grid.innerHTML = '<div id="assets-empty">Could not load assets list.</div>';
     }
   }
@@ -1806,5 +1813,7 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
   uploadFileInput.addEventListener('change', function(){ [].forEach.call(this.files, uploadFile); });
 })();
 </script>
+<div id="previewLightbox" onclick="this.style.display='none'"><img src="" alt="Preview"></div>
+
 </body>
 </html>
