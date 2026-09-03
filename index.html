@@ -619,6 +619,7 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <div style="display:flex;gap:8px;flex-wrap:wrap" id="consoleTabs">
           <button class="btn btn-outline" data-tab="tabDash" style="background:var(--accent);color:var(--bg);border-color:var(--accent);padding:6px 16px;font-size:.8rem">📊 Dashboard</button>
           <button class="btn btn-outline" data-tab="tabLogs" style="padding:6px 16px;font-size:.8rem">📜 Live Logs</button>
+          <button class="btn btn-outline" data-tab="tabStatus" style="padding:6px 16px;font-size:.8rem">🖥️ System</button>
         </div>
         <div style="display:flex;gap:16px;align-items:center">
           <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--accent)" id="consoleStatus">● monitoring</span>
@@ -705,6 +706,19 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
 
         <div id="logsHint" style="margin-top:8px;font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted)">
           💡 Commands: <code>say Hello</code> broadcasts to all players · uses server console, not desktop
+        </div>
+      </div>
+      
+      <!-- Tab: System Status -->
+      <div id="tabStatus" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px" id="statusNodes"></div>
+        <div id="statusEmpty" style="text-align:center;padding:40px;color:var(--text-muted)">
+          No system data yet. Run the status agent on your Proxmox host to report in.<br>
+          <span style="font-family:var(--font-mono);font-size:.78rem;display:block;margin-top:12px;color:var(--text-muted)">crontab: * * * * * bash /root/status-agent.sh</span>
+        </div>
+        <div id="statusChartWrap" style="margin-top:24px;display:none">
+          <h3 style="font-family:var(--font-head);font-weight:600;font-size:1rem;color:var(--text);margin-bottom:12px">📈 CPU & RAM (24h)</h3>
+          <canvas id="statusChart" style="width:100%;max-height:200px"></canvas>
         </div>
       </div>
       
@@ -1473,6 +1487,126 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
     if(color) d.style.color = color;
     return d;
   }
+
+  // ─── SYSTEM STATUS ──────────────────────────────────
+  async function loadSystemStatus(){
+    const nodes = document.getElementById('statusNodes');
+    const empty = document.getElementById('statusEmpty');
+    if(!nodes) return;
+    try {
+      const r = await fetch('/status.php?pass=' + encodeURIComponent(PASS), {signal:AbortSignal.timeout(8000)});
+      const data = await r.json();
+      if(!data.ok || !data.nodes || data.nodes.length === 0){
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      const chartWrap = document.getElementById('statusChartWrap');
+      const allHistory = data.history || {};
+      nodes.innerHTML = data.nodes.map(n => {
+        const tempStr = n.temp > 0 ? n.temp.toFixed(1) + '°C' : 'N/A';
+        const uptimeStr = uptimeFmt(n.uptime || n.uptime);
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <span style="font-family:var(--font-head);font-weight:700;font-size:1.1rem;color:var(--text)">🖥️ ${n.label}</span>
+            <span style="font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono)">${timeSince(n.ts)}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><div class="r-label">CPU</div><div class="r-bar"><div class="r-fill" style="width:${n.cpu}%;background:${n.cpu > 80 ? 'var(--red)' : 'var(--accent)'}"></div></div><div class="r-val">${n.cpu.toFixed(1)}%</div></div>
+            <div><div class="r-label">RAM</div><div class="r-bar"><div class="r-fill" style="width:${n.ram}%;background:${n.ram > 80 ? 'var(--red)' : 'var(--secondary)'}"></div></div><div class="r-val">${n.ram.toFixed(1)}%</div></div>
+            <div><div class="r-label">Disk</div><div class="r-bar"><div class="r-fill" style="width:${n.disk}%;background:${n.disk > 85 ? 'var(--red)' : '#39d335'}"></div></div><div class="r-val">${n.disk.toFixed(1)}%</div></div>
+            <div><div class="r-label">Temp</div><div class="r-val" style="margin-top:4px">${tempStr}</div></div>
+          </div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono)">⏱ ${uptimeStr}</div>
+        </div>`;
+      }).join('');
+
+      // Show chart if history exists
+      const labels = Object.keys(allHistory);
+      if(labels.length > 0 && allHistory[labels[0]] && allHistory[labels[0]].length > 1){
+        chartWrap.style.display = 'block';
+        drawStatusChart(allHistory[labels[0]]);
+      }
+    } catch(e){
+      if(empty) empty.style.display = 'block';
+    }
+  }
+
+  function uptimeFmt(secs){
+    if(!secs) return 'unknown';
+    const d = Math.floor(secs / 86400);
+    const h = Math.floor((secs % 86400) / 3600);
+    return d + 'd ' + h + 'h';
+  }
+
+  function timeSince(ts){
+    const diff = Math.floor(Date.now()/1000) - ts;
+    if(diff < 60) return diff + 's ago';
+    if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  function drawStatusChart(points){
+    const c = document.getElementById('statusChart');
+    if(!c) return;
+    const ctx = c.getContext('2d');
+    const W = c.parentElement.clientWidth || 600;
+    const H = 200;
+    c.width = W * 2; c.height = H * 2;
+    c.style.width = W + 'px'; c.style.height = H + 'px';
+    ctx.scale(2, 2);
+    const pad = {left:50, top:20, bottom:20};
+    const chartW = W - pad.left - 20;
+    const chartH = H - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, W, H);
+
+    const vals = points.map(p => ({cpu: p.cpu || 0, ram: p.ram || 0}));
+    const maxCpu = Math.max(...vals.map(v => v.cpu), 10);
+    const maxRam = Math.max(...vals.map(v => v.ram), 10);
+    const maxV = Math.max(maxCpu, maxRam, 50);
+    const cpuScale = chartH / Math.min(maxV * 1.2, 100);
+    const ramScale = chartH / Math.min(maxV * 1.2, 100);
+
+    // CPU line
+    ctx.strokeStyle = '#39d335';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    vals.forEach((v, i) => {
+      const x = pad.left + i / (vals.length - 1) * chartW;
+      const y = pad.top + chartH - v.cpu * cpuScale;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // RAM line
+    ctx.strokeStyle = '#ffb000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    vals.forEach((v, i) => {
+      const x = pad.left + i / (vals.length - 1) * chartW;
+      const y = pad.top + chartH - v.ram * ramScale;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Labels
+    ctx.fillStyle = 'rgba(255,255,255,.4)';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(maxV.toFixed(0) + '%', pad.left - 5, pad.top + 10);
+    ctx.fillText('0', pad.left - 5, H - pad.bottom);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#39d335';
+    ctx.fillText('CPU', W - 60, pad.top + 10);
+    ctx.fillStyle = '#ffb000';
+    ctx.fillText('RAM', W - 60, pad.top + 24);
+  }
+
+  // Load system status when tab is activated
+  document.querySelector('#consoleTabs button[data-tab="tabStatus"]')?.addEventListener('click', function(){
+    setTimeout(loadSystemStatus, 100);
+  });
 
   // Refresh button
   document.getElementById('consoleRefresh')?.addEventListener('click', fetchStatus);
