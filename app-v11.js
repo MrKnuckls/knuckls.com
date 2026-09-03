@@ -283,25 +283,26 @@ window.consoleAuthFn = async function(){
   var g = function(id){ return document.getElementById(id); };
   var gate = g('consoleGate'), dash = g('consoleDash'), inp = g('consolePass'), fail = g('consoleFail');
   var authed = false;
-    // Auto-auth if already logged in
-    if(sessionStorage.getItem('caSession')){
-      if(g('consoleGate')) g('consoleGate').style.display = 'none';
-      if(g('consoleDash')) g('consoleDash').style.display = 'block';
-      window.dispatchEvent(new Event('caSession'));
-    }
-      var timer = null;
-    var ws = null;
+  var timer = null;
+  var ws = null;
 
-    // ─── Dashboard functions ───
-      var PASS = 'knuckls2026';
-  
-      // Listen for global auth event
-      window.addEventListener('caSession', function(){
-        authed = true;
-        fetchStatus();
-        if(typeof timer !== 'undefined' && timer) clearInterval(timer);
-        timer = setInterval(fetchStatus, 15000);
-      });
+  // ─── Dashboard functions ───
+  var PASS = 'knuckls2026';
+
+  // Listen for global auth event (register BEFORE auto-auth check)
+  window.addEventListener('caSession', function(){
+    authed = true;
+    fetchStatus();
+    if(typeof timer !== 'undefined' && timer) clearInterval(timer);
+    timer = setInterval(fetchStatus, 15000);
+  });
+
+  // Auto-auth if already logged in (fires after listener is registered)
+  if(sessionStorage.getItem('caSession')){
+    if(g('consoleGate')) g('consoleGate').style.display = 'none';
+    if(g('consoleDash')) g('consoleDash').style.display = 'block';
+    window.dispatchEvent(new Event('caSession'));
+  }
   var serverIds = ['palworld','starrupture','arma','dayz','hytale'];
   var consoleGrid = g('consoleGrid');
   var statusEl = g('consoleStatus');
