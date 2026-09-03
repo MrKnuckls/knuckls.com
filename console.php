@@ -13,7 +13,7 @@ header('Access-Control-Allow-Origin: *');
 header('Cache-Control: no-cache, no-store, must-revalidate');
 
 // ─── CONFIG ────────────────────────────────────────
-$API_KEY = 'ptlc_4hVo6A1svgkXu07eSR3cNfL6L0WOoQ4YGXdgwwAO87X';
+$API_KEY = 'ptlc_QMlMOYzopaXwKn1A9nuRuztLy2Tgy62vNlcn7atfErC';
 $PANEL  = 'https://panel.knucklsgames.com';
 $PASS   = 'knuckls2026'; // simple password, change this
 
@@ -137,6 +137,43 @@ if ($action === 'power') {
     $uuid = $SERVERS[$server]['uuid'];
     $resp = ptl('POST', "/api/client/servers/$uuid/power", ['signal' => $signal]);
     echo json_encode(['ok' => !isset($resp['error']), 'msg' => "$signal sent to $server"]);
+    exit;
+}
+
+// WebSocket token — returns token + websocket endpoint for browser-side live console
+if ($action === 'ws') {
+    $server = $_GET['server'] ?? '';
+    if (!isset($SERVERS[$server])) {
+        echo json_encode(['error' => 'invalid server']);
+        exit;
+    }
+    $uuid = $SERVERS[$server]['uuid'];
+    $data = ptl('GET', "/api/client/servers/$uuid/websocket");
+    if (isset($data['error'])) {
+        echo json_encode(['error' => 'failed to get websocket token']);
+        exit;
+    }
+    // The token endpoint returns { data: { token, socket } }
+    $wsData = $data['data'] ?? [];
+    echo json_encode([
+        'token'  => $wsData['token'] ?? '',
+        'socket' => $wsData['socket'] ?? '',
+        'server' => $server,
+    ]);
+    exit;
+}
+
+// Send console command
+if ($action === 'command') {
+    $server = $_GET['server'] ?? '';
+    $cmd = $_GET['cmd'] ?? '';
+    if (!isset($SERVERS[$server]) || !$cmd) {
+        echo json_encode(['error' => 'invalid server or empty command']);
+        exit;
+    }
+    $uuid = $SERVERS[$server]['uuid'];
+    $resp = ptl('POST', "/api/client/servers/$uuid/command", ['command' => $cmd]);
+    echo json_encode(['ok' => !isset($resp['error']), 'msg' => "Command sent"]);
     exit;
 }
 

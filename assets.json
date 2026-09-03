@@ -1,0 +1,9 @@
+[
+  {
+    "id": "test-asset",
+    "title": "Test Asset",
+    "desc": "A test upload to verify the download proxy works.",
+    "type": "zip",
+    "size": "unknown"
+  }
+]

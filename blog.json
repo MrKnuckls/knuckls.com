@@ -1,26 +1,42 @@
 [
   {
-    "date": "Sep 2, 2026",
-    "title": "Knuckls OS announced",
-    "body": "Starting a new project — a custom OS built from the ground up. Custom kernel, custom bootloader, my own architecture. This is going to take a long time but the vision is clear: an OS that does exactly what I want, nothing I don't. First milestone: get a bare-metal boot screen with my logo displayed.",
-    "tags": ["os", "kernel", "new"]
+    "id": "sanroque-dev-001",
+    "title": "SanRoque — First Look",
+    "date": "2026-09-02",
+    "category": "Game Dev",
+    "author": "MrKnuckls",
+    "version": "0.1.0",
+    "image": "",
+    "content": "SanRoque is a co-op open-world survival game built in Unreal Engine 5. This dev log will track progress from early prototype to full release.\\n\\nCurrent features:\\n- Procedural terrain with instanced tree system\\n- Basic inventory with drag-and-drop (6×6 grid + hotbar)\\n- EasyRoads 3D road network\\n- Custom character movement and interaction\\n\\nNext up: crafting system, building framework, and the first enemy AI."
   },
   {
-    "date": "Aug 28, 2026",
-    "title": "Build 0.3 — terrain system working",
-    "body": "Spent the week on instanced terrain trees in SanRoque. Root cause was the MeshRenderer needing to live on the prefab root, not child objects. Fix was merging all parts into one mesh on the root. Trees now render properly across the whole map. Next up: crafting UI.",
-    "tags": ["sanroque", "ue5", "fix"]
+    "id": "sanroque-dev-002",
+    "title": "Inventory System Complete",
+    "date": "2026-09-02",
+    "category": "Game Dev",
+    "author": "MrKnuckls",
+    "version": "0.1.1",
+    "image": "",
+    "content": "The inventory system is fully functional — drag items between slots, equip weapons/armor, use consumables. Built with Jinxish Drag&Drop for the clean dark-slate UI with gold borders.\\n\\nFixed a namespace collision (CS0118) between SanRoque.Inventory and the drag-drop library. Everything compiles clean now."
   },
   {
-    "date": "Aug 20, 2026",
-    "title": "Inventory system overhaul",
-    "body": "Ripped out the old inventory framework and built a custom Jinxish Drag&Drop system. 6x6 grid with hotbar at the bottom, dark slate panel with gold borders. Had a CS0118 namespace collision with the old framework's Inventory class — deleted the conflicting one and it compiled clean.",
-    "tags": ["sanroque", "ue5", "ui"]
+    "id": "knuckls-os-001",
+    "title": "Knuckls OS Announced",
+    "date": "2026-09-02",
+    "category": "Projects",
+    "author": "MrKnuckls",
+    "version": "0.1.0",
+    "image": "",
+    "content": "Knuckls OS is in early design — a custom operating system built from scratch. No timeline yet, but the architecture planning phase has started. Will document the kernel design, boot process, and system calls here as development progresses."
   },
   {
-    "date": "Aug 15, 2026",
-    "title": "knuckls.com launched",
-    "body": "New static site is live. No more WordPress — just raw HTML with matrix rain, Terminal branding, and server status. Wordpress is gone, the rack is humming, and the squad has a proper hub now.",
-    "tags": ["site", "deploy", "infra"]
+    "id": "lab-update-001",
+    "title": "Home Lab Expansion",
+    "date": "2026-09-02",
+    "category": "Infrastructure",
+    "author": "MrKnuckls",
+    "version": "",
+    "image": "",
+    "content": "Added Pterodactyl panel for all game servers behind a Cloudflare Tunnel. Five steam servers running: PalWorld, StarRupture, Arma Reforger, DayZ, and Hytale. Centralized management through the panel — all automated, all monitored.\\n\\nLocal network (10.15.34.188) hosts everything with public access tunneled through Cloudflare."
   }
 ]

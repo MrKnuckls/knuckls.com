@@ -615,20 +615,26 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
     
     <!-- Dashboard (hidden until authed) -->
     <div id="consoleDash" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
-        <div style="display:flex;gap:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="consoleTabs">
+          <button class="btn btn-outline" data-tab="tabDash" style="background:var(--accent);color:var(--bg);border-color:var(--accent);padding:6px 16px;font-size:.8rem">📊 Dashboard</button>
+          <button class="btn btn-outline" data-tab="tabLogs" style="padding:6px 16px;font-size:.8rem">📜 Live Logs</button>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center">
           <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--accent)" id="consoleStatus">● monitoring</span>
           <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted)" id="consoleLast">last: —</span>
+          <button class="btn btn-outline" id="consoleRefresh" style="padding:6px 16px;font-size:.8rem">↻ Refresh</button>
         </div>
-        <button class="btn btn-outline" id="consoleRefresh" style="padding:6px 16px;font-size:.8rem">↻ Refresh</button>
-      </div>
-      
-      <div class="servers-grid" id="consoleGrid">
-        <!-- Filled by JS -->
       </div>
 
-      <!-- Uptime Timeline -->
-      <div id="uptimePanel" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
+      <!-- Tab: Dashboard -->
+      <div id="tabDash">
+        <div class="servers-grid" id="consoleGrid">
+          <!-- Filled by JS -->
+        </div>
+
+        <!-- Uptime Timeline -->
+        <div id="uptimePanel" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
           <h3 style="font-family:var(--font-head);font-weight:600;font-size:1.05rem;color:var(--text);margin:0">📊 Uptime Timeline</h3>
           <div style="display:flex;gap:6px" id="uptimeRangeTabs">
@@ -668,6 +674,37 @@ footer .copy{font-size:.78rem;color:var(--text-muted)}
         <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted)">
           <span><span style="display:inline-block;width:12px;height:3px;background:var(--accent);border-radius:2px;margin-right:4px"></span> CPU %</span>
           <span><span style="display:inline-block;width:12px;height:3px;background:var(--secondary);border-radius:2px;margin-right:4px"></span> RAM (MB)</span>
+        </div>
+      </div>
+    </div>
+
+      <!-- Tab: Live Logs -->
+      <div id="tabLogs" style="display:none">
+        <div id="logsServerSelect" style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+          <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--text-muted)">Server:</span>
+          <select id="logsServer" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text);font-family:var(--font-mono);font-size:.8rem;outline:none">
+            <option value="palworld">PalWorld</option>
+            <option value="starrupture">StarRupture</option>
+            <option value="arma">Reforger</option>
+            <option value="dayz">DayZ</option>
+            <option value="hytale">Hytale</option>
+          </select>
+          <button class="btn btn-outline" id="logsConnect" style="padding:6px 16px;font-size:.8rem">🔌 Connect</button>
+          <button class="btn btn-outline" id="logsDisconnect" style="padding:6px 16px;font-size:.8rem;display:none">⏹ Disconnect</button>
+          <span id="logsStatus" style="font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted)">Not connected</span>
+        </div>
+        
+        <div id="logsContainer" style="background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;padding:12px;height:400px;overflow-y:auto;font-family:monospace;font-size:.78rem;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-all">
+          <span style="color:var(--text-muted)">Select a server and click Connect. Console output appears here in real time.</span>
+        </div>
+        
+        <div id="logsInputRow" style="display:flex;gap:8px;margin-top:12px;display:none">
+          <input type="text" id="logsCmdInput" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:monospace;font-size:.8rem;outline:none" placeholder="Enter a server command..." autocomplete="off">
+          <button class="btn btn-outline" id="logsCmdSend" style="padding:8px 16px;font-size:.8rem">⏎ Send</button>
+        </div>
+
+        <div id="logsHint" style="margin-top:8px;font-family:var(--font-mono);font-size:.7rem;color:var(--text-muted)">
+          💡 Commands: <code>say Hello</code> broadcasts to all players · uses server console, not desktop
         </div>
       </div>
       
@@ -1275,6 +1312,143 @@ document.querySelectorAll('section:not(#hero)').forEach(el=>{
       loadResources(server, range);
     });
   });
+
+  // ─── CONSOLE TAB SWITCHING ─────────────────────────
+  document.querySelectorAll('#consoleTabs button').forEach(btn => {
+    btn.addEventListener('click', function(){
+      const tabId = this.dataset.tab;
+      document.querySelectorAll('#consoleTabs button').forEach(b => {
+        b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
+      });
+      this.style.background = 'var(--accent)'; this.style.color = 'var(--bg)'; this.style.borderColor = 'var(--accent)';
+      document.querySelectorAll('#consoleDash > div[id^="tab"]').forEach(d => d.style.display = 'none');
+      document.getElementById(tabId).style.display = 'block';
+    });
+  });
+
+  // ─── LIVE LOGS (WebSocket Console) ──────────────
+  let logSocket = null;
+  let logWsToken = '';
+  let logWsSocket = '';
+  let logAutoScroll = true;
+  const logContainer = document.getElementById('logsContainer');
+  const logStatus = document.getElementById('logsStatus');
+  const logConnect = document.getElementById('logsConnect');
+  const logDisconnect = document.getElementById('logsDisconnect');
+  const logServer = document.getElementById('logsServer');
+  const logInput = document.getElementById('logsCmdInput');
+  const logSend = document.getElementById('logsCmdSend');
+  const logInputRow = document.getElementById('logsInputRow');
+
+  if(logContainer){
+    logContainer.addEventListener('scroll', () => {
+      logAutoScroll = logContainer.scrollTop + logContainer.clientHeight >= logContainer.scrollHeight - 30;
+    });
+
+    document.getElementById('logsConnect')?.addEventListener('click', async function(){
+      const srv = document.getElementById('logsServer').value;
+      logStatus.textContent = 'Connecting...';
+      logStatus.style.color = 'var(--secondary)';
+      try {
+        const r = await fetch(`/console.php?action=ws&pass=${encodeURIComponent(PASS)}&server=${srv}`, {signal:AbortSignal.timeout(8000)});
+        const data = await r.json();
+        if(data.error) throw new Error(data.error);
+        logWsToken = data.token;
+        logWsSocket = data.socket;
+        connectLogs(data.token, data.socket);
+      } catch(e){
+        logStatus.textContent = 'Connection failed: ' + e.message;
+        logStatus.style.color = 'var(--red)';
+      }
+    });
+
+    document.getElementById('logsDisconnect')?.addEventListener('click', function(){
+      disconnectLogs();
+    });
+
+    logSend?.addEventListener('click', function(){
+      const cmd = logInput.value.trim();
+      if(!cmd || !logSocket || logSocket.readyState !== WebSocket.OPEN) return;
+      const srv = logServer.value;
+      // Send via API
+      fetch(`/console.php?action=command&pass=${encodeURIComponent(PASS)}&server=${srv}&cmd=${encodeURIComponent(cmd)}`, {signal:AbortSignal.timeout(5000)}).catch(()=>{});
+      logContainer.appendChild(logLine('→ ' + cmd, 'var(--secondary)'));
+      logContainer.scrollTop = logContainer.scrollHeight;
+      logInput.value = '';
+    });
+
+    logInput?.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') logSend?.click();
+    });
+  }
+
+  function connectLogs(token, socket){
+    if(logSocket) disconnectLogs();
+    logStatus.textContent = 'Connecting WebSocket...';
+    logStatus.style.color = 'var(--secondary)';
+    logContainer.innerHTML = '<span style="color:var(--text-muted)">Connecting to console...</span>';
+
+    logSocket = new WebSocket(socket);
+    logSocket.addEventListener('open', () => {
+      logSocket.send(JSON.stringify({event: 'auth', args: [token]}));
+      logStatus.textContent = 'Authenticating...';
+    });
+    logSocket.addEventListener('message', (e) => {
+      let msg;
+      try { msg = JSON.parse(e.data); } catch { return; }
+      if(msg.event === 'auth success'){
+        logStatus.textContent = 'Connected';
+        logStatus.style.color = 'var(--accent)';
+        logConnect.style.display = 'none';
+        logDisconnect.style.display = 'inline-block';
+        logInputRow.style.display = 'flex';
+        logContainer.innerHTML = '<span style="color:var(--text-muted)">Console connected. Waiting for output...</span>';
+        // Request console output
+        logSocket.send(JSON.stringify({event: 'send command', args: ['']}));
+      } else if(msg.event === 'console output'){
+        const out = (msg.args || []).join('');
+        if(out){
+          logContainer.appendChild(logLine(out, 'var(--text)'));
+          if(logAutoScroll) logContainer.scrollTop = logContainer.scrollHeight;
+        }
+      } else if(msg.event === 'daemon error' || msg.event === 'token expiring'){
+        logStatus.textContent = msg.args?.[0] || 'Error';
+        logStatus.style.color = 'var(--secondary)';
+      } else if(msg.event === 'token expired'){
+        disconnectLogs();
+        logStatus.textContent = 'Token expired — reconnect';
+        logStatus.style.color = 'var(--red)';
+      } else if(msg.event === 'status'){
+        // ignore status updates in log view
+      }
+    });
+    logSocket.addEventListener('close', () => {
+      disconnectLogs();
+    });
+    logSocket.addEventListener('error', () => {
+      logStatus.textContent = 'WebSocket error';
+      logStatus.style.color = 'var(--red)';
+    });
+  }
+
+  function disconnectLogs(){
+    if(logSocket) {
+      try{ logSocket.close(); }catch(e){}
+      logSocket = null;
+    }
+    logStatus.textContent = 'Disconnected';
+    logStatus.style.color = 'var(--text-muted)';
+    logConnect.style.display = 'inline-block';
+    logDisconnect.style.display = 'none';
+    logInputRow.style.display = 'none';
+  }
+
+  function logLine(text, color){
+    const d = document.createElement('div');
+    d.textContent = text;
+    if(color) d.style.color = color;
+    return d;
+  }
 
   // Refresh button
   document.getElementById('consoleRefresh')?.addEventListener('click', fetchStatus);
